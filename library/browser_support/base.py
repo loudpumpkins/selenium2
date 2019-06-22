@@ -5,8 +5,9 @@ import re
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 
+from selenium.common.exceptions import NoSuchElementException
 # internal
-from ..logger import Logger, ElementNotFound
+from ..logger import Logger
 
 class Base:
 
@@ -91,12 +92,16 @@ class Base:
 		elements = strategy_method(query, tag, constraints,
 		                    parent=parent or self.driver)
 		if required and not elements:
-			raise ElementNotFound('{} with locator "{}" not found. '
+			raise NoSuchElementException('{} with locator "{}" not found. '
 			'it was parsed as strategy="{}" and query="{}"'.format(
 				element_type, locator, strategy, query
 			))
 		if first_only:
 			if not elements:
+				self.log.warn('{} with locator "{}" not found. '
+					'it was parsed as strategy="{}" and query="{}"'.format(
+						element_type, locator, strategy, query
+					))
 				return None
 			return elements[0]
 		return elements
@@ -145,7 +150,7 @@ class Base:
 		'id:element'            returns     'id' and 'element'
 		'class name = myClass'  returns     'class name' and 'myClass'
 		"""
-		if locator.startswith(('//', '(//')):
+		if locator.startswith(('/', '(/')):
 			return 'xpath', locator
 		if locator.startswith('#'):
 			return 'id', locator[1:]

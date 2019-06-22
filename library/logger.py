@@ -61,19 +61,3 @@ class Logger:
 			return path
 		else:
 			return filename
-
-
-class ElementNotFound(Exception):
-	pass
-
-
-class WindowNotFound(Exception):
-	pass
-
-
-class CookieNotFound(Exception):
-	pass
-
-
-class NoOpenBrowser(Exception):
-	pass

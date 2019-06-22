@@ -1,0 +1,5 @@
+config/config_production.py
+.idea/
+__pycache__
+*.pyc
+*.log

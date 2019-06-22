@@ -9,9 +9,10 @@ HOST = {
 	'db': 'azcanint_oc'
 }
 
-# Browser
 
-#time sas floats
-DEFAULT_TIMEOUT = 5.0
-DEFAULT_IMPLICIT_WAIT = 0.0
+
+# default timeout amount for explicit waits as as int
+DEFAULT_TIMEOUT = 12
+
+# running speed of the script
 DEFAULT_SPEED = 0.0

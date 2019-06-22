@@ -26,7 +26,7 @@ class Browser:
 	'chrome', 'ie', 'edge'. NOTE: avoid using options and profiles if possible
 	as they will be deprecated.
 
-	usage:
+	example:
 	-   basic browser:
 			chrome = Browser('chrome')
 	-   with desired capabilities
@@ -45,13 +45,13 @@ class Browser:
 
 	def __init__(self, browser='ff', desired_capabilities=None,
 	             profile=None, options=None):
-		self.log = Logger().log
-		self.timeout = DEFAULT_TIMEOUT
-		self.implicit_wait = DEFAULT_IMPLICIT_WAIT
-		self.speed = DEFAULT_SPEED
 		self.driver = WebDriverCreator().create_driver(
 			browser, desired_capabilities, profile, options
 		)
+		self.implicit_wait = 0
+		self.log = Logger().log
+		self.speed = DEFAULT_SPEED
+		self.timeout = DEFAULT_TIMEOUT
 		libraries = [
 			Alert(self),
 			BrowserManagement(self),
@@ -64,7 +64,7 @@ class Browser:
 		return self
 
 	def __exit__(self, *args):
-		self.driver.quit()
+		self.close_session()
 
 	# @property
 	# def driver(self):
@@ -84,6 +84,14 @@ class Browser:
 	def get_members(self, library):
 		for name in dir(library):
 			yield name, getattr(library, name)
+
+	def set_implicit_wait(self, time_to_wait):
+		self.driver.implicitly_wait(time_to_wait)
+		self.implicit_wait = time_to_wait
+
+	def unset_implicit_wait(self):
+		self.driver.implicitly_wait(0)
+		self.implicit_wait = 0
 
 
 

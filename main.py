@@ -51,13 +51,21 @@ log = Logger().log
 # firefox.driver.get('http://www.ip-secrets.com/')
 
 
-ff = Browser('chrome')
-# ff.goto('https://javascript.info/alert-prompt-confirm')
-# ff.highlight_elements('class:line-numbers')
-ff.goto('http://localhost/test.html')
 
-ff
-ff.press_keys(None, 'ESC')
+
+
+ff = Browser('ff')
+
+
+
+ff.goto('https://javascript.info/alert-prompt-confirm')
+ff.click_element('/html/body/div[1]/div[2]/div[1]/main/div[1]/article/div[2]/div[4]/div/div[1]/div[1]/a')
+ff.handle_alert('close')
+ff.handle_alert('OK')
+
+
+# ff.close_session()
+
 
 
 #
