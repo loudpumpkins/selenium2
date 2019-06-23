@@ -8,6 +8,10 @@ from .logger import Logger
 from .browser_support.alert import Alert
 from .browser_support.browsermanagement import BrowserManagement
 from .browser_support.element import Element
+from .browser_support.frames import Frames
+from .browser_support.javascript import Javascript
+from .browser_support.screenshot import Screenshot
+
 from .browser_support.methodsmixin import MethodsMixin
 from .browser_support.webdrivercreator import WebDriverCreator
 
@@ -52,10 +56,15 @@ class Browser:
 		self.log = Logger().log
 		self.speed = DEFAULT_SPEED
 		self.timeout = DEFAULT_TIMEOUT
+		self.screenshot_directory = SCREENSHOT_ROOT_DIRECTORY
 		libraries = [
 			Alert(self),
 			BrowserManagement(self),
 			Element(self),
+			Frames(self),
+			Javascript(self),
+			Screenshot(self),
+
 			MethodsMixin(self),
 		]
 		self.get_attributes(libraries)

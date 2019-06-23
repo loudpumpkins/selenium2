@@ -13,7 +13,7 @@ class Base:
 
 	def __init__(self, root):
 		"""
-		Base class with the browser driver and comment functions
+		Base class with the browser driver and fundamental functions
 		:param root: the main Browser class
 		"""
 		self._root = root

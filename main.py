@@ -54,15 +54,13 @@ log = Logger().log
 
 
 
-ff = Browser('ff')
+ff = Browser('chrome')
 
 
 
-ff.goto('https://javascript.info/alert-prompt-confirm')
-ff.click_element('/html/body/div[1]/div[2]/div[1]/main/div[1]/article/div[2]/div[4]/div/div[1]/div[1]/a')
-ff.handle_alert('close')
-ff.handle_alert('OK')
-
+ff.goto('https://www.w3schools.com/html/html_iframe.asp')
+test1 = ff.capture_element_screenshot('//*[@id="right"]/div[2]')
+print(test1)
 
 # ff.close_session()
 

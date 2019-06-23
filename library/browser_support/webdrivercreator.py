@@ -12,8 +12,10 @@ class WebDriverCreator:
 	browser_names = {
 		'googlechrome' : 'chrome', 'gc' : 'chrome', 'chrome' : 'chrome', 'google' : 'chrome',   # chrome
 		'headlesschrome' : 'headless_chrome', 'chromeheadless' : 'headless_chrome',             # headless chrome
+		'headless_chrome':'headless_chrome', 'headless chrome':'headless_chrome',
 		'ff' : 'firefox', 'firefox' : 'firefox',                                                # firefox
 		'headlessfirefox' : 'headless_firefox', 'firefoxheadless' : 'headless_firefox',         # headless firefox
+		'headless firefox':'headless_firefox', 'headless_firefox': 'headless_firefox',
 		'ie' : 'ie', 'internetexplorer' : 'ie', 'explorer': 'ie',                               # internet explorer
 		'edge' : 'edge',                                                                        # edge
 
@@ -59,7 +61,9 @@ class WebDriverCreator:
 		browser = browser.lower()
 		if browser in self.browser_names:
 			return getattr(self, 'create_{}'.format(self.browser_names[browser]))
-		raise ValueError('{} is not a supported browser yet.'.format(browser))
+		raise ValueError('{} is not a supported browser yet.\n'
+		        'Available: chrome, firefox, headless chrome, headless firefox, '
+		        'explorer and edge.'.format(browser))
 
 
 	''' browser specific creation methods below '''

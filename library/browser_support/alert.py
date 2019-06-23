@@ -2,7 +2,6 @@ from config import *
 
 # external
 from selenium.common.exceptions import TimeoutException, NoAlertPresentException
-from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
 
 # internal
@@ -31,7 +30,7 @@ class Alert(Base):
 				str(timeout)
 			))
 			return alert
-		except TimeoutException:
+		except:
 			raise NoAlertPresentException('Failed to find an alert')
 
 	def get_alert_text(self, timeout=DEFAULT_TIMEOUT):
@@ -79,6 +78,7 @@ class Alert(Base):
 
 	def _handle_alert(self, alert, action):
 		"""
+		See handle_alert() for details
 		:param alert: selenium.webdriver.common.alert import Alert
 		:param action: str - accept / dismiss / leave
 		:return: str - the text value of the alert
@@ -90,6 +90,6 @@ class Alert(Base):
 		elif actn == 'CANCEL' or actn == 'DISMISS' or actn == 'CLOSE':
 			alert.dismiss()
 		elif not (actn == 'IGNORE' or actn == 'NONE' or actn == 'LEAVE'):
-			raise ValueError("Invalid alert action '%s'." % action)
+			raise ValueError('Invalid alert action: {}.'.format(action))
 		return text
 

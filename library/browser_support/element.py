@@ -71,7 +71,7 @@ class Element(Base):
 		"""
 		Click image identified by locator. Will automatically append
 		the correct tag to help pinpoint the image
-		:param locator: WebEelement or str
+		:param locator: WebElement or str
 		:return: NoReturn
 		"""
 		self.log.info('Clicking image {}.'.format(locator))
@@ -84,7 +84,7 @@ class Element(Base):
 	def double_click_element(self, locator):
 		"""
 		Double click element identified by the locator
-		:param locator: WebEelement or str
+		:param locator: WebElement or str
 		:return: NoReturn
 		"""
 		self.log.info('Double clicking element {}'.format(locator))
@@ -98,8 +98,8 @@ class Element(Base):
 
 		Example:
 			ff.drag_and_drop('css:div#element','css:div.target')
-		:param locator: WebEelement or str
-		:param target: WebEelement or str
+		:param locator: WebElement or str
+		:param target: WebElement or str
 		:return: NoReturn
 		"""
 		self.log.info('Dragging {} onto {}'.format(locator, target))
@@ -113,7 +113,7 @@ class Element(Base):
 		Drags element identified with ``locator`` by ``xoffset/yoffset``.
 		Example:
 			ff.drag_and_drop_by_offset(myElem, 50, -35) #50px right, 35px down
-		:param locator: WebEelement or str
+		:param locator: WebElement or str
 		:param xoffset: X offset to move to, as a positive or negative integer.
 		:param yoffset: Y offset to move to, as a positive or negative integer.
 		:return: NoReturn
