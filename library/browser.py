@@ -11,10 +11,10 @@ from .browser_support.element import Element
 from .browser_support.frames import Frames
 from .browser_support.javascript import Javascript
 from .browser_support.screenshot import Screenshot
+from .browser_support.selects import Selects
+from .browser_support.tables import Tables
 
-from .browser_support.methodsmixin import MethodsMixin
 from .browser_support.webdrivercreator import WebDriverCreator
-
 
 
 class Browser:
@@ -64,8 +64,8 @@ class Browser:
 			Frames(self),
 			Javascript(self),
 			Screenshot(self),
-
-			MethodsMixin(self),
+			Selects(self),
+			Tables(self),
 		]
 		self.get_attributes(libraries)
 

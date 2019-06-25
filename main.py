@@ -58,9 +58,17 @@ ff = Browser('chrome')
 
 
 
-ff.goto('https://www.w3schools.com/html/html_iframe.asp')
-test1 = ff.capture_element_screenshot('//*[@id="right"]/div[2]')
-print(test1)
+ff.goto('https://html.com/tables/')
+
+t = ff.find_element('//*[@id="post-382"]/div/div[4]/table')
+
+
+
+test = ff.get_table_row_by_text(t,'333333333.')
+
+# print(test.text)
+for te in test:
+	print(te.text)
 
 # ff.close_session()
 

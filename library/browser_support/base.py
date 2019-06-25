@@ -108,6 +108,15 @@ class Base:
 
 	def find_elements(self, locator, tag=None, required=False, parent=None):
 		""" same as find_element, but returns a list of elements """
+		if self._is_webelement(locator):
+			return [locator] # find_elements must return a list
+		if isinstance(locator, list):
+			for element in locator:
+				if not self._is_webelement(element):
+					raise ValueError(
+						'"locator" must be a string or a list of WebElements '
+						'but it was a list containing a {}.'.format(type(element)))
+			return locator
 		return self.find_element(locator, tag, required, parent, False)
 
 	def is_text_present(self, text):
@@ -150,7 +159,7 @@ class Base:
 		'id:element'            returns     'id' and 'element'
 		'class name = myClass'  returns     'class name' and 'myClass'
 		"""
-		if locator.startswith(('/', '(/')):
+		if locator.startswith(('/', '(', '.')):
 			return 'xpath', locator
 		if locator.startswith('#'):
 			return 'id', locator[1:]

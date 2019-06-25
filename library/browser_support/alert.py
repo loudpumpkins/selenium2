@@ -36,6 +36,7 @@ class Alert(Base):
 	def get_alert_text(self, timeout=DEFAULT_TIMEOUT):
 		"""
 		Returns the text value in the alert
+
 		:param timeout:
 		:return:
 		"""
