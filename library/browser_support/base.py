@@ -98,7 +98,7 @@ class Base:
 			))
 		if first_only:
 			if not elements:
-				self.log.warn('{} with locator "{}" not found. '
+				self.log.info('{} with locator "{}" not found. '
 					'it was parsed as strategy="{}" and query="{}"'.format(
 						element_type, locator, strategy, query
 					))

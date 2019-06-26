@@ -13,6 +13,7 @@ from .browser_support.javascript import Javascript
 from .browser_support.screenshot import Screenshot
 from .browser_support.selects import Selects
 from .browser_support.tables import Tables
+from .browser_support.waiting import Waiting
 
 from .browser_support.webdrivercreator import WebDriverCreator
 
@@ -66,6 +67,7 @@ class Browser:
 			Screenshot(self),
 			Selects(self),
 			Tables(self),
+			Waiting(self),
 		]
 		self.get_attributes(libraries)
 

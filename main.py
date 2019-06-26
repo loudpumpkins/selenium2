@@ -54,23 +54,18 @@ log = Logger().log
 
 
 
-ff = Browser('chrome')
+ff = Browser('ff')
 
 
 
-ff.goto('https://html.com/tables/')
+ff.goto('https://html.com/input-type-hidden/')
+title = ff.get_title()
 
-t = ff.find_element('//*[@id="post-382"]/div/div[4]/table')
+t = ff.wait_for_page_to_contain('EGFERGREGRRRGRGRG', negate=True)
+print(t)
 
-
-
-test = ff.get_table_row_by_text(t,'333333333.')
-
-# print(test.text)
-for te in test:
-	print(te.text)
-
-# ff.close_session()
+ff.driver.close()
+ff.driver.quit()
 
 
 
