@@ -14,7 +14,7 @@ from .browser_support.screenshot import Screenshot
 from .browser_support.selects import Selects
 from .browser_support.tables import Tables
 from .browser_support.waiting import Waiting
-from .browser_support.webdrivercreator import WebDriverCreator
+from .browser_support._webdrivercreator import WebDriverCreator
 from .browser_support.windowmanager import WindowManager
 
 

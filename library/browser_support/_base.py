@@ -3,20 +3,21 @@ from config import *
 # external
 import re
 from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.remote.webdriver import WebDriver
-
 from selenium.common.exceptions import NoSuchElementException
+
 # internal
 from ..logger import Logger
+from ._driver import Driver
 
-class Base:
+
+class Base(Driver):
 
 	def __init__(self, root):
 		"""
 		Base class with the browser driver and fundamental functions
 		:param root: the main Browser class
 		"""
-		self._root = root
+		super().__init__(root)
 		self.log = Logger().log
 		self._strategies = {
 			'identifier': self._find_by_identifier,
@@ -60,24 +61,53 @@ class Base:
 			'default': 'default',
 		}
 
-	@property
-	def driver(self):
-		driver: WebDriver = self._root.driver
-		return driver
-
-
 	def find_element(self, locator, tag=None, required=True, parent=None,
 	                 first_only=True) -> WebElement:
 		""" Main method used to find elements. Will call the right method
 		based on the locator provided
-		:param locator: str: the query used to find element(s)
-			Can also use a list of webElements to refine with tags
-		:param tag: str: tags used to filter the results, such as refine to
+
+		- The ``locator`` can be specified to use an explicit strategy, such as
+		  find_element_by_xpath('//path') in selenium is equivalent to
+		  find_element('xpath://path'). Available strategies are:
+		  'identifier', 'id', 'name', 'xpath', 'dom', 'link', 'patial link',
+		  'css', 'class name', 'jquery' and 'tag'
+
+		- Some locator strategies have shortcuts. Such as `locators` starting
+		  with '#' will find elements with IDs. exp: #myId will look for
+		  elements with an ID of 'myId'
+		  Shortcuts:
+			# 1- A valid xpath as a locator will automatically use the xPath
+				 strategy
+			# 2- A string starting with `#` will look for IDs with the id
+				 following the `#` symbol.
+				 find_element('#myId') === find_element('id:myId')
+			# 3- A string starting with `@` will look for links with the text
+			     following the `@` symbol.
+			     find_element('@loging') === find_element('link:login')
+
+        - If a ``tag`` is included, it will filter the result of the search
+          as an additional constraint.
+
+        - By default, ``required`` is set to True which will throw a
+          NoSuchElementException if the element is not found. Set ``required``
+          to False to return None if the element is not found.
+
+        - Provide a ``parent`` WebElement to narrow the search to the sub nodes
+          of the parent node. NOTE: if xPath is used, xPath may still return
+          ALL nodes that match, and not just the sub nodes. Make sure to
+          prepend '.' to limit the search to the parent's sub nodes.
+
+        - ``first_only`` will limit the search result to the first matching
+          element. In find_elements, we set ``first_only`` to False return a
+          list of elements.
+
+		:param locator: str or WebElement
+		:param tag: str - tags used to filter the results, such as refine to
 			"H1" elements only
-		:param required: bool: [required] will raise 'ElementNotFound' exception
+		:param required: bool - [required] will raise 'ElementNotFound' exception
 			if element isn't found. [not required] will return 'None'
-		:param parent: object: the driver or parent element
-		:param first_only: bool: return all elements or only the first
+		:param parent: WebElement - the driver or parent element
+		:param first_only: bool - return all elements or only the first
 		:return WebElement:
 		"""
 		element_type = 'Element' if not tag else tag.capitalize()
@@ -107,28 +137,81 @@ class Base:
 		return elements
 
 	def find_elements(self, locator, tag=None, required=False, parent=None):
-		""" same as find_element, but returns a list of elements """
+		"""
+		Function will return a list of matching WebElements instead of a
+		single WebElement as `find_element` does.
+
+		See `find_element` for ``locator`` usage and function details.
+
+		- Differences:
+			# 1- Returns a list of matching WebElements
+				 (even if only one is found)
+			# 2- Can accept a list of Webelements to filter with the provided
+				 ``tag``
+
+		:param locator: List[WebElement] or str
+			Can also use a list of webElements to refine with tags
+		:param tag: str - tags used to filter the results, such as refine to
+			"H1" elements only
+		:param required: bool - [required] will raise 'ElementNotFound' exception
+			if element isn't found. [not required] will return 'None'
+		:param parent: WebElement - the driver or parent element
+		:return: List[WebElement]
+		"""
 		if self._is_webelement(locator):
 			return [locator] # find_elements must return a list
 		if isinstance(locator, list):
+			# if a list of web elements is provided, filter it using the provided tag
 			for element in locator:
 				if not self._is_webelement(element):
 					raise ValueError(
 						'"locator" must be a string or a list of WebElements '
 						'but it was a list containing a {}.'.format(type(element)))
-			return locator
+			tag, constraints = self._get_tag_and_constraints(tag)
+			return self._filter(locator, tag, constraints)
 		return self.find_element(locator, tag, required, parent, False)
 
 	def is_text_present(self, text):
+		"""
+		See if page to contains `text`. This will not look into the page source
+		for text, but will use xpath to find a node that contains the text.
+		Use get_source() to find text in the page's source.
+
+		:param text: str
+		:return: bool
+		"""
 		locator = "xpath://*[contains(., %s)]" % self._escape_xpath_value(text)
 		return self.find_element(locator, required=False) is not None
 
 	def is_element_enabled(self, locator, tag=None):
+		"""
+		See if an element located by ``locator`` is enabled.
+
+		See `find_element()` for ``locator`` syntax.
+
+		:param locator:
+		:param tag:
+		:return:
+		"""
 		element = self.find_element(locator, tag)
 		return (element.is_enabled() and
 		        element.get_attribute('readonly') is None)
 
 	def is_visible(self, locator):
+		"""
+		See if an element located by ``locator`` is visible.
+		Visibility is determined by selenium and looks for attributes /
+		properties such as <input> with type 'hidden', NOSCRIPT elements
+		`dom.isElement(elem, goog.dom.TagName.NOSCRIPT)`, styles set as
+		'visibility':'hidden' or 'display':'none', opacity set to zero, etc.
+		Selenium will also look for the element's parent's visibility to
+		determine this element's visibility.
+
+		See `find_element()` for ``locator`` syntax.
+
+		:param locator: str or WebElement
+		:return:
+		"""
 		element = self.find_element(locator, required=False)
 		return element.is_displayed() if element else None
 

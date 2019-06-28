@@ -8,11 +8,11 @@ import time
 
 # internal
 from ..logger import Logger
-from .base import Base
+from ._driver import Driver
 
 WindowInfo = namedtuple('WindowInfo', 'handle, id, name, title, url')
 
-class WindowManager(Base):
+class WindowManager(Driver):
 
 	def __init__(self, root):
 		super().__init__(root)

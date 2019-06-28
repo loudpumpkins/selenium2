@@ -59,17 +59,13 @@ ff = Browser('chrome')
 
 
 ff.goto('google.ca')
+ff.inject_jQuery()
 
 
 
 
-info = ff.get_window_size()
-
-print(type(info))
-print(info)
-
-ff.driver.close()
-ff.driver.quit()
+# ff.driver.close()
+# ff.driver.quit()
 
 
 

@@ -3,13 +3,15 @@ from config import *
 # external
 import os
 from collections import namedtuple
+from selenium.common.exceptions import JavascriptException
+from selenium.webdriver.support.wait import WebDriverWait
 
 # internal
 from ..logger import Logger
-from .base import Base
+from ._driver import Driver
 
 
-class Javascript(Base):
+class Javascript(Driver):
 
 	js_marker = 'JAVASCRIPT'
 	arg_marker = 'ARGUMENTS'
@@ -51,6 +53,34 @@ class Javascript(Base):
 		js_code, js_args = self._get_javascript_to_execute(code)
 		self._js_logger('Executing JavaScript', js_code, js_args)
 		return self.driver.execute_script(js_code, *js_args)
+
+	def inject_jQuery(self):
+		"""
+		Will inject jQuery version 3.4.1 into the current page if it is not
+		already available.
+
+		:return: NoReturn
+		"""
+		try:
+			version = self.driver.execute_script(
+				'return window.jQuery.prototype.jquery')
+		except JavascriptException:
+			self.log.info('Injecting jQuery into page.')
+			js_code = """
+				var jquery = document.createElement('script');
+				jquery.type = 'text/javascript';
+				jquery.src = 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js';
+				document.getElementsByTagName('head')[0].append(jquery);
+				"""
+			self.driver.execute_script(js_code)
+			wait = WebDriverWait(driver=self.driver, timeout=DEFAULT_TIMEOUT,
+			                     ignored_exceptions=JavascriptException)
+			wait.until(lambda driver: True if driver.execute_script(
+					'return window.jQuery.prototype.jquery') else False)
+		else:
+			self.log.info('jQuery version {} already available for use.'.format(
+				version))
+
 
 	######################################################
 	### Snippets below from Robot Framework Foundation ###

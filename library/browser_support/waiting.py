@@ -7,7 +7,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 # internal
 from ..logger import Logger
-from .base import Base
+from ._base import Base
 
 
 class Waiting(Base):
@@ -23,6 +23,8 @@ class Waiting(Base):
 
 		Set ``negate`` to True to exit explicit wait when the element is no
 		longer present
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
 
 		:param locator: WebElement or str
 		:param negate: bool - True will wait for condition to be truthy, False
@@ -51,6 +53,8 @@ class Waiting(Base):
 
 		Set ``negate`` to True to exit explicit wait when the element is disabled
 		Returns bool result.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
 
 		:param locator: WebElement or str
 		:param negate: bool - True will wait for condition to be truthy, False
@@ -86,6 +90,8 @@ class Waiting(Base):
 		Set ``negate`` to True to exit explicit wait when the element is invisible
 		Returns bool result.
 
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:param negate: bool - True will wait for condition to be truthy, False
 			will wait for the condition to be falsy
@@ -113,6 +119,8 @@ class Waiting(Base):
 
 		Set ``negate`` to True to wait for `element` to NOT contain `text`.
 		Returns bool result.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
 
 		:param locator: WebElement or str
 		:param text: str - text searched

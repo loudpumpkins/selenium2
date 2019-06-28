@@ -4,7 +4,7 @@ from config import *
 
 # internal
 from ..logger import Logger
-from .base import Base
+from ._base import Base
 
 
 class Frames(Base):
@@ -24,6 +24,9 @@ class Frames(Base):
 		to be used as the index where the first index starts at 1.
 
 		Will return None if the method passed to it has NoReturn.
+
+		See `find_element` method in `_base.py` for ``frame_locator`` and
+		``element_locator`` usage/syntax
 
 		:param frame_locator: WebElement, str or int - locator of the frame.
 		:param element_locator: WebElement or str - Locator of the searched
@@ -46,6 +49,9 @@ class Frames(Base):
 
 		Works both with frames and iframes. Use `Unselect Frame` to cancel
 		the frame selection and return to the main frame.
+
+		See `find_element` method in `_base.py` for ``locator_or_index``
+		usage/syntax
 
 		:param locator_or_index: WebElement, str or int
 		:return: NoReturn

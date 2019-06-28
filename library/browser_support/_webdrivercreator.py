@@ -65,8 +65,9 @@ class WebDriverCreator:
 		        'Available: chrome, firefox, headless chrome, headless firefox, '
 		        'explorer and edge.'.format(browser))
 
-
-	''' browser specific creation methods below '''
+	###############################################
+	### browser specific creation methods below ###
+	###############################################
 
 	def create_chrome(self, desired_capabilities, profile, options):
 		if profile is not None:
@@ -131,4 +132,6 @@ class WebDriverCreator:
 			desired_capabilities = {}
 		return webdriver.Edge(capabilities=desired_capabilities)
 
-	''' ^^ end ^^ '''
+	###############################################
+	###                   END                   ###
+	###############################################

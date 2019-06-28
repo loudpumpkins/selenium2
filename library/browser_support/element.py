@@ -7,7 +7,7 @@ from selenium.webdriver.common.keys import Keys
 
 # internal
 from ..logger import Logger
-from .base import Base
+from ._base import Base
 
 
 class Element(Base):
@@ -19,6 +19,9 @@ class Element(Base):
 	def clear_element_text(self, locator):
 		"""
 		Clears the value of text entry element identified by locator.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebEelement or str
 		:return: NoReturn
 		"""
@@ -29,6 +32,9 @@ class Element(Base):
 		"""
 		Click button identified by locator. Will automatically append
 		the correct tag to help pinpoint the button
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebEelement or str
 		:return: NoReturn
 		"""
@@ -41,7 +47,10 @@ class Element(Base):
 	def click_element(self, locator):
 		"""
 		Click element identified by locator. Will automatically append
-		the correct tag to help pinpoint the element
+		the correct tag to help pinpoint the element.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebEelement or str
 		:return: NoReturn
 		"""
@@ -52,6 +61,9 @@ class Element(Base):
 		"""
 		Cursor is moved at the center of the element and x/y coordinates are
 		calculated from that point.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebEelement or str
 		:param xoffset: X offset to move to, as a positive or negative integer.
 		:param yoffset: Y offset to move to, as a positive or negative integer.
@@ -71,6 +83,9 @@ class Element(Base):
 		"""
 		Click image identified by locator. Will automatically append
 		the correct tag to help pinpoint the image
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:return: NoReturn
 		"""
@@ -84,6 +99,9 @@ class Element(Base):
 	def double_click_element(self, locator):
 		"""
 		Double click element identified by the locator
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:return: NoReturn
 		"""
@@ -95,6 +113,8 @@ class Element(Base):
 	def drag_and_drop(self, locator, target):
 		"""
 		Drags element identified by ``locator`` into ``target`` element.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
 
 		Example:
 			ff.drag_and_drop('css:div#element','css:div.target')
@@ -113,6 +133,9 @@ class Element(Base):
 		Drags element identified with ``locator`` by ``xoffset/yoffset``.
 		Example:
 			ff.drag_and_drop_by_offset(myElem, 50, -35) #50px right, 35px down
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:param xoffset: X offset to move to, as a positive or negative integer.
 		:param yoffset: Y offset to move to, as a positive or negative integer.
@@ -127,7 +150,10 @@ class Element(Base):
 
 	def element_text_contains(self, locator, expected, ignore_case=True):
 		"""
-		See if an expected text exists in an element
+		See if an expected text exists in an element.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:param expected: str - the text that needs to be found
 		:param ignore_case: bool - set to false to make the comparison case
@@ -142,6 +168,16 @@ class Element(Base):
 		return False # element not found
 
 	def element_text_is(self, locator, expected, ignore_case=False):
+		"""
+		See if an expected text is equal to the element's text.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
+		:param locator:
+		:param expected:
+		:param ignore_case:
+		:return:
+		"""
 		element = self.find_element(locator, required=False)
 		if element is not None:
 			text = element.text.lower() if ignore_case else element.text
@@ -152,8 +188,11 @@ class Element(Base):
 	def get_element_attribute(self, locator, attribute):
 		"""
 		Get an element's attribute such as:
-		<input type="text" value="Name:"> if attribute is value
+		<input type="text" value="Name:"> if ``attribute`` is 'value'
 		returns "Name:"
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:param attribute: str
 		:return: str
@@ -165,6 +204,9 @@ class Element(Base):
 		Get an element's property such as:
 		<input type="text" value="Name:"> if property is value
 		returns current value, not the initial state; so "John" for exp
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:param prop: str
 		:return: str
@@ -174,6 +216,9 @@ class Element(Base):
 	def get_element_size(self, locator):
 		"""
 		returns the width and height of the element as integers
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:return: int, int
 		"""
@@ -183,6 +228,9 @@ class Element(Base):
 	def get_text(self, locator):
 		"""
 		return the text of an element
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:return: str
 		"""
@@ -192,6 +240,7 @@ class Element(Base):
 		"""
 		Checks entire page and all frames for specific text
 		This is not the same as looking into the page's source
+
 		:param text: str - text we want to assert is present
 		:return: bool
 		"""
@@ -234,9 +283,11 @@ class Element(Base):
 		NUMPAD9, PAGE_DOWN, PAGE_UP, PAUSE, RETURN, RIGHT, SEMICOLON
 		SEPARATOR, SHIFT, SPACE, SUBTRACT, TAB, UP
 
-		:param locator:
-		:param keys:
-		:return:
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
+		:param locator: str, WebElement or None
+		:param keys: str or List[str]
+		:return: NoReturn
 		"""
 		parsed_keys = self._parse_keys(*keys)
 		if locator is not None:
@@ -247,7 +298,11 @@ class Element(Base):
 
 	def highlight_elements(self, locator, tag=None):
 		"""
-		Will cover elements identified by locator with a blue div without breaking page
+		Will cover elements identified by locator with a blue div without
+		breaking page
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:param tag: str
 		:return: NoReturn
@@ -278,6 +333,9 @@ class Element(Base):
 		"""
 		Simulates pressing the left mouse button on the element ``locator``.
 		The element is pressed without releasing the mouse button.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:return: NoReturn
 		"""
@@ -289,6 +347,9 @@ class Element(Base):
 	def mouse_out(self, locator):
 		"""
 		Simulates moving mouse away from the element ``locator``.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:return: NoReturn
 		"""
@@ -304,6 +365,9 @@ class Element(Base):
 	def mouse_over(self, locator):
 		"""
 		Simulates hovering mouse over the element ``locator``.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:return: NoReturn
 		"""
@@ -315,6 +379,9 @@ class Element(Base):
 	def mouse_up(self, locator):
 		"""
 		Simulates releasing the left mouse button on the element ``locator``.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:return: NoReturn
 		"""
@@ -325,6 +392,9 @@ class Element(Base):
 	def set_focus_to_element(self, locator):
 		"""
 		Sets focus to element identified by the locator.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:return: NoReturn
 		"""
@@ -334,6 +404,9 @@ class Element(Base):
 	def scroll_element_into_view(self, locator):
 		"""
 		Scrolls an element identified by ``locator`` into view.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:return: NoReturn
 		"""
@@ -344,6 +417,9 @@ class Element(Base):
 		"""
 		Simulates ``event`` on element identified by ``locator``.
 		example of accepted events are 'onerror', 'onload', 'onclick' ...
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:param event: str
 		:return: NoReturn

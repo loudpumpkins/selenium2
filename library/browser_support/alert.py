@@ -2,36 +2,39 @@ from config import *
 
 # external
 from selenium.common.exceptions import TimeoutException, NoAlertPresentException
+from selenium.webdriver.support.expected_conditions import alert_is_present
 from selenium.webdriver.support.ui import WebDriverWait
 
 # internal
 from ..logger import Logger
-from .base import Base
+from ._driver import Driver
 
-class Alert(Base):
+class Alert(Driver):
 	_next_alert_action = 'accept'
 
 	def __init__(self, root):
 		super().__init__(root)
 		self.log = Logger().log
 
-	def get_alert(self, timeout=DEFAULT_TIMEOUT):
+	def get_alert(self, timeout=DEFAULT_TIMEOUT,
+	              message='Getting alert with a timeout of {} second(s).'):
 		"""
 		Switch focus to the alert and return it.
+		get_alert() will place the timeout in seconds into the ``message`` if
+		an extra set of curly brackets {} are placed.
 
 		:param timeout: int - time in seconds for explicit wait
+		:param message: str - error message to return in case of failure
 		:return: alert selenium.webdriver.common.alert import Alert
 		"""
+		self.log.info(message.format(timeout))
 		try:
-			alert = WebDriverWait(self.driver, timeout).until(
-				lambda driver: driver.switch_to.alert
-			)
-			self.log.info('Getting alert with a timeout of {} seconds.'.format(
-				str(timeout)
-			))
+			alert = WebDriverWait(self.driver, timeout).until(alert_is_present())
 			return alert
-		except:
-			raise NoAlertPresentException('Failed to find an alert')
+		except TimeoutException as error:
+			error.msg = ('Failed to find the alert before the timeout '
+						' [{} second(s)].'.format(timeout))
+			raise NoAlertPresentException('Failed to find an alert') from error
 
 	def get_alert_text(self, timeout=DEFAULT_TIMEOUT):
 		"""
@@ -40,10 +43,8 @@ class Alert(Base):
 		:param timeout:
 		:return:
 		"""
-		alert = self.get_alert(timeout)
-		self.log.info('Getting alert text.'.format(
-			str(timeout)
-		))
+		alert = self.get_alert(timeout,
+		        message='Getting alert text with a timeout of {} second(s).')
 		return self._handle_alert(alert, 'ignore')
 
 	def handle_alert(self, action='accept', timeout=DEFAULT_TIMEOUT):
@@ -59,10 +60,9 @@ class Alert(Base):
 		:param timeout: int - time in seconds for explicit wait
 		:return: str - the text value of the alert
 		"""
-		alert = self.get_alert(timeout)
-		self.log.info('Handling alert [{}].'.format(
-			action.lower() ,str(timeout)
-		))
+		log_message = ('Handling alert [action:'+action.lower()+'] with a '
+					   'timeout of {} seconds')
+		alert = self.get_alert(timeout, message=log_message)
 		return self._handle_alert(alert, action)
 
 	def input_text_into_alert(self, text, action='accept', timeout=DEFAULT_TIMEOUT):
@@ -73,7 +73,9 @@ class Alert(Base):
 		:param timeout: int - explicit wait time in seconds
 		:return: str - the text of the prompt
 		"""
-		alert = self.get_alert(timeout)
+		log_message = ('Placing text ['+text+'] into alert [action:'+action.lower()+']'
+				       'with a timeout of {} seconds')
+		alert = self.get_alert(timeout, message=log_message)
 		alert.send_keys(text)
 		self._handle_alert(alert, action)
 

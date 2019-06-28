@@ -5,9 +5,9 @@ import re
 
 # internal
 from ..logger import Logger
-from .base import Base
+from ._driver import Driver
 
-class BrowserManagement(Base):
+class BrowserManagement(Driver):
 
 	def __init__(self, root):
 		super().__init__(root)

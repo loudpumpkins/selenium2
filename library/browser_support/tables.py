@@ -4,7 +4,7 @@ from config import *
 
 # internal
 from ..logger import Logger
-from .base import Base
+from ._base import Base
 
 
 class Tables(Base):
@@ -26,6 +26,8 @@ class Tables(Base):
 		``locator``	has nested tables as all the <th>, <td> and <tr> tags
 		are added to the list of elements regardless of who is the immediate
 		parent of the node.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
 
 		:param locator: WebElement or str - the table
 		:param row: str or int - first index starts at 1
@@ -53,6 +55,8 @@ class Tables(Base):
 		are added to the list of elements regardless of who is the immediate
 		parent of the node.
 
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str - the table
 		:param row: str or int - first index starts at 1
 		:param column: str or int - first index starts at 1
@@ -64,6 +68,8 @@ class Tables(Base):
 		"""
 		Returns the cell WebElement that's content is equal to the ``text``
 		provided within the table identified by ``locator``
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
 
 		:param locator: WebElement or str - the table
 		:param text: str
@@ -88,6 +94,8 @@ class Tables(Base):
 		are added to the list of elements regardless of who is the immediate
 		parent of the node.
 
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str - the table
 		:param row: str or int - first index starts at 1
 		:return: List[WebElements] or []
@@ -101,6 +109,8 @@ class Tables(Base):
 		"""
 		Returns a list of all cell WebElements of a row which contains a cell
 		with text equal to ``text`` in the table identified by ``locator``
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
 
 		:param locator: WebElement or str - the table
 		:param text: str

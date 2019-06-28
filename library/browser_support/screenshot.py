@@ -5,7 +5,7 @@ import os
 
 # internal
 from ..logger import Logger
-from .base import Base
+from ._base import Base
 
 
 class Screenshot(Base):
@@ -25,6 +25,8 @@ class Screenshot(Base):
 		Support for capturing the screenshot from a element has limited support
 		among browser vendors. Please check the browser vendor driver documentation
 		does the browser support capturing a screenshot from a element.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
 
 		:param locator: WebElement or str
 		:param filename: str - desired filename

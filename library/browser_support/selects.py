@@ -1,12 +1,11 @@
 from config import *
 
 # external
-from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import Select
 
 # internal
 from ..logger import Logger
-from .base import Base
+from ._base import Base
 
 
 class Selects(Base):
@@ -37,6 +36,8 @@ class Selects(Base):
         get_select_items('#myId', values=True)
             returns: ['books', 'html', 'css', 'php', 'js']
 
+        See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:param values: bool - True returns values / False returns labels
 		:return: List[str]
@@ -59,6 +60,8 @@ class Selects(Base):
 
 		Will return the label by default; set ``values`` to True to get the value.
 
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:param values: bool - True returns values / False returns labels
 		:return: str
@@ -75,6 +78,8 @@ class Selects(Base):
 	def select_all_from_multilist(self, locator):
 		"""
 		Selects all options from multi-selection list ``locator``.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
 
 		:param locator: WebElement or str
 		:return: NoReturn
@@ -98,6 +103,8 @@ class Selects(Base):
 		specified options are selected, but possible old selections are
 		not cleared.
 
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:param indexes: *str
 		:return: NoReturn
@@ -120,6 +127,8 @@ class Selects(Base):
 		specified options are selected, but possible old selections are
 		not cleared.
 
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:param values: *str
 		:return: NoReturn
@@ -141,6 +150,8 @@ class Selects(Base):
 		specified options are selected, but possible old selections are
 		not cleared.
 
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:param labels: *str
 		:return: NoReturn
@@ -157,6 +168,8 @@ class Selects(Base):
 		"""
 		Unselects all options from multi-selection list ``locator``.
 
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:return: NoReturn
 		"""
@@ -172,6 +185,8 @@ class Selects(Base):
 		Unselects options from selection list ``locator`` by ``indexes``.
 		Indexes of list options start from 0. This function works only with
 		multi-selection lists.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
 
 		:param locator: WebElement or str
 		:param indexes: *str
@@ -194,6 +209,8 @@ class Selects(Base):
 		Unselects options from selection list ``locator`` by ``values``.
 		This function works only with multi-selection lists.
 
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
 		:param locator: WebElement or str
 		:param values: *str
 		:return: NoReturn
@@ -213,6 +230,8 @@ class Selects(Base):
 		"""
 		Unselects options from selection list ``locator`` by ``labels``.
 		This function works only with multi-selection lists.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
 
 		:param locator: WebElement or str
 		:param labels: *str
