@@ -14,8 +14,8 @@ from .browser_support.screenshot import Screenshot
 from .browser_support.selects import Selects
 from .browser_support.tables import Tables
 from .browser_support.waiting import Waiting
-
 from .browser_support.webdrivercreator import WebDriverCreator
+from .browser_support.windowmanager import WindowManager
 
 
 class Browser:
@@ -68,13 +68,16 @@ class Browser:
 			Selects(self),
 			Tables(self),
 			Waiting(self),
+			WindowManager(self),
 		]
 		self.get_attributes(libraries)
 
 	def __enter__(self):
+		# python context manager
 		return self
 
 	def __exit__(self, *args):
+		# python context manager
 		self.close_session()
 
 	# @property

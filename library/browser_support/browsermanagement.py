@@ -50,7 +50,7 @@ class BrowserManagement(Base):
 	def goto(self, url):
 		"""Navigates the active browser instance to the provided url.
 		Will append default prefix to the url if it's missing"""
-		if not re.search(r'^https?://', url):
+		if not re.search(r'^(https?://|file:///)', url):
 			url = 'https://' + url
 		self.log.info("Opening url '%s'" % url)
 		self.driver.get(url)

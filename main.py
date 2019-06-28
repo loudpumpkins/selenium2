@@ -54,15 +54,19 @@ log = Logger().log
 
 
 
-ff = Browser('ff')
+ff = Browser('chrome')
 
 
 
-ff.goto('https://html.com/input-type-hidden/')
-title = ff.get_title()
+ff.goto('google.ca')
 
-t = ff.wait_for_page_to_contain('EGFERGREGRRRGRGRG', negate=True)
-print(t)
+
+
+
+info = ff.get_window_size()
+
+print(type(info))
+print(info)
 
 ff.driver.close()
 ff.driver.quit()
@@ -89,8 +93,8 @@ ff.driver.quit()
 # import re
 #
 # for word in words:
-# 	index = re.search('^ ?((\w+ )?(\w+)) ?[:=] ?(.+)', word)
-# 	print('{'+index.group(1)+'}', '===', '{'+index.group(4)+'}')
+# 	index = re.search('^ ?(\w+) ?[:=] ?(.+)', word)
+# 	print('{'+index.group(1)+'}', '===', '{'+index.group(2)+'}')
 
 
 
