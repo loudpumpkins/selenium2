@@ -1,7 +1,6 @@
-from config import *
+from .config import *
 
 # external
-from selenium import webdriver
 
 # internal
 from .logger import Logger

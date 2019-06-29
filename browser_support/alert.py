@@ -1,4 +1,4 @@
-from config import *
+from ..config import *
 
 # external
 from selenium.common.exceptions import TimeoutException, NoAlertPresentException

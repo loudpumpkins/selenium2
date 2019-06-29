@@ -1,4 +1,4 @@
-from config import *
+from .config import *
 
 # external
 from typing import Any, Callable, List, NamedTuple, NoReturn, Union as U, Tuple
