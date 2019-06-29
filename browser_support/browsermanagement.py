@@ -17,16 +17,6 @@ class BrowserManagement(Driver):
 		""" Simulates a back button click """
 		self.driver.back()
 
-	def close_browser(self):
-		""" Close all windows and tabs associated with the session """
-		self.log.info('Closing current active browser/tab')
-		self.driver.close()
-
-	def close_session(self):
-		""" Close all windows and tabs associated with the session """
-		self.log.info('Closing session with session id {}.'
-		               .format(self.driver.session_id))
-
 	def forward(self):
 		""" Simulates a forward button click """
 		self.driver.forward()
@@ -54,6 +44,12 @@ class BrowserManagement(Driver):
 			url = 'https://' + url
 		self.log.info("Opening url '%s'" % url)
 		self.driver.get(url)
+
+	def quit(self):
+		""" Close the browser, effectively ending the session """
+		self.log.info('Closing session with session id {}.'
+		               .format(self.driver.session_id))
+		self.driver.quit()
 
 	def refresh(self):
 		""" Refreshes current page """

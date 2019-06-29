@@ -14,24 +14,27 @@ from .browser_support.screenshot import Screenshot
 from .browser_support.selects import Selects
 from .browser_support.tables import Tables
 from .browser_support.waiting import Waiting
-from .browser_support._webdrivercreator import WebDriverCreator
 from .browser_support.windowmanager import WindowManager
+from .browser_support._webdrivercreator import WebDriverCreator
 
 
 class Browser:
 	"""
-
 	Selenium Webdriver Controller
 	Uses WebDriverCreator to make a browser and mixins for support
 	functionality.
 
+	See browser.pyi for all function prototypes available to Browser.
+	More detailed documentation coming soon, but each individual function is
+	documented in their respected file.
+
 	=== WebDriverCreator ===
 
-	supported 'firefox', 'headless firefox', 'headless chrome',
+	supported browser: 'firefox', 'headless firefox', 'headless chrome',
 	'chrome', 'ie', 'edge'. NOTE: avoid using options and profiles if possible
 	as they will be deprecated.
 
-	example:
+	Instantiating a new browser example:
 	-   basic browser:
 			chrome = Browser('chrome')
 	-   with desired capabilities
@@ -44,7 +47,24 @@ class Browser:
 			}
 			firefox = Browser('firefox', desired_capabilities=dc)
 
-	=== MethodsMixin
+	=== Available methods ===
+
+	A browser instance will have all the methods not pre-fixed with an
+	underscore (_) defined the following classes / files:
+
+			Driver              |   _driver.py
+			Base                |   _base.py
+			Alert               |   alert.py
+			BrowserManagement   |   browsermanagement.py
+			Element             |   element.py
+			Frames              |   frames.py
+			Javascript          |   javascript.py
+			Screenshot          |   screenshot.py
+			Selects             |   selects.py
+			Tables              |   tables.py
+			Waiting             |   waiting.py
+			WindowManager       |   windowmanager.py
+
 
 	"""
 
@@ -55,7 +75,7 @@ class Browser:
 		)
 		self.implicit_wait = 0
 		self.log = Logger().log
-		self.speed = DEFAULT_SPEED
+		self.speed = DEFAULT_SPEED # TODO add a session speed controller
 		self.timeout = DEFAULT_TIMEOUT
 		self.screenshot_directory = SCREENSHOT_ROOT_DIRECTORY
 		libraries = [
@@ -78,8 +98,9 @@ class Browser:
 
 	def __exit__(self, *args):
 		# python context manager
-		self.close_session()
+		self.quit()
 
+	# TODO possibly add a session manager to allow for multiple sessions at once
 	# @property
 	# def driver(self):
 	# 	return self.driver
@@ -89,6 +110,15 @@ class Browser:
 	# 	self.driver = driver
 
 	def get_attributes(self, libraries):
+		"""	Will parse every method in ``libraries`` and append those that
+		don't start with an underscore (_) to `self`.
+
+		All methods defined in ``libraries`` that start with an underscore are
+		considered `helper methods` to `core methods` and should not be used
+		directly by `self`, hence, are omitted.
+
+		This also applied to attributes.
+		"""
 		for library in libraries:
 			for name, value in self.get_members(library):
 				if not hasattr(self, name) and not name.startswith('_'):
@@ -96,6 +126,7 @@ class Browser:
 					setattr(self, name, value)
 
 	def get_members(self, library):
+		"""Get the name:value pairs of the methods in the instance provided."""
 		for name in dir(library):
 			yield name, getattr(library, name)
 
