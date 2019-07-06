@@ -4,7 +4,7 @@ import os
 DEBUG = True
 
 # default timeout in seconds for explicit waits as an int
-DEFAULT_TIMEOUT = 2
+DEFAULT_TIMEOUT = 15
 
 # default location to store screenshots. Can be changed using set_screenshot_directory(path)
 SCREENSHOT_ROOT_DIRECTORY = os.path.abspath(
@@ -20,8 +20,6 @@ SCREENSHOT_ROOT_DIRECTORY = os.path.abspath(
 		'screenshots'
 	)
 )
-
-print(SCREENSHOT_ROOT_DIRECTORY)
 
 # running speed of the script
 DEFAULT_SPEED = 0.0

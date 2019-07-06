@@ -1,6 +1,7 @@
 from .config import *
 
 # external
+import re
 
 # internal
 from .logger import Logger
@@ -21,7 +22,7 @@ class Browser:
 	"""
 	Selenium Webdriver Controller
 	Uses WebDriverCreator to make a browser and mixins for support
-	functionality.
+	functionality found in ./browser_support.
 
 	See browser.pyi for all function prototypes available to Browser.
 	More detailed documentation coming soon, but each individual function is
@@ -29,30 +30,56 @@ class Browser:
 
 	=== WebDriverCreator ===
 
-	supported browser: 'firefox', 'headless firefox', 'headless chrome',
+	WebDriverCreator, found in ./browser_support/_webdrivercreator.py, will
+	start a new session with the browser of choice provided when instantiating
+	"Browser" at it's first function argument, "browser=". Firefox is the
+	default browser if none is specified.
+
+	Supported browsers: 'firefox', 'headless firefox', 'headless chrome',
 	'chrome', 'ie', 'edge'. NOTE: avoid using options and profiles if possible
 	as they will be deprecated.
 
-	Instantiating a new browser example:
+	Browser.__init__() arguments:
+		:param browser: A string representing the desired browser from the list
+			`supported browsers` above. `browser` is case insensitive and
+			aliases are available such as "ff" for "firefox". See
+			_webdrivercreator.py -> "browser_names" for all aliases.
+		:param desired_capabilities: Dictionary object with non-browser specific
+            capabilities only, such as "proxy" or "loggingPref".
+            list: https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities
+		:param profile: Instance of ``FirefoxProfile`` object or a string.
+			If undefined, a fresh profile will be created in a temporary
+			location on the system. (Firefox exclusive argument)
+		:param options: this takes an instance of browser specific options class
+			such as webdriver.FirefoxOptions()
+
+	Example:
 	-   basic browser:
 			chrome = Browser('chrome')
-	-   with desired capabilities
+	-   with desired capabilities:
 			proxy = {
-				'proxyType':'manual',
-				'httpProxy':'25.25.125.125:8080',
+				'proxyType': 'MANUAL',
+			    'sslProxy': '192.0.0.1:80',
+				'httpProxy': '192.0.0.1:80',
+				'ftpProxy': '192.0.0.1:80',
 			}
 			dc = {
-				'proxy':proxy,
+				'proxy': proxy,
 			}
 			firefox = Browser('firefox', desired_capabilities=dc)
+
+	NOTE: browser specific drivers need to be present and their path
+	needs to be appended in the system's PATH variable.
+	DOWNLOAD LINK: https://www.seleniumhq.org/download/
 
 	=== Available methods ===
 
 	A browser instance will have all the methods not pre-fixed with an
-	underscore (_) defined the following classes / files:
+	underscore (_) defined in the following classes/files:
 
-			Driver              |   _driver.py
-			Base                |   _base.py
+		_____CLASS_NAME_________|____FILE_NAME____________
+			Driver              |   _driver.py              (PARENT)
+			Base                |   _base.py                (SUB_PARENT)
 			Alert               |   alert.py
 			BrowserManagement   |   browsermanagement.py
 			Element             |   element.py
@@ -64,6 +91,25 @@ class Browser:
 			Waiting             |   waiting.py
 			WindowManager       |   windowmanager.py
 
+	=== Additional functionality ===
+
+	Additional site specific methods can be imported from the ./site_specific
+	folder.
+
+	They can be instantiated directly:
+	  kijiji = Kijiji('chrome', desired_capabilities=dc)
+	  kijiji.sign_in('username', 'password')
+
+	But if functionality is required for multiple sites in a single session,
+	create a Browser instance and pass it to the classes as a function argument.
+	  browser = Browser('chrome')               (1)
+	  kijiji = Kijiji(browser)                  (2)
+	  kijiji.sign_in('username', 'password')
+	  kijiji = None                             #garbage collection
+	  facebook = Facebook(browser)              (3)
+	  facebook.sign_in('username', 'password')
+	  facebook = None                           #garbage collection
+	  browser.quit()                            (4)
 
 	"""
 
@@ -129,11 +175,52 @@ class Browser:
 		for name in dir(library):
 			yield name, getattr(library, name)
 
+	def assert_proxy_is(self, ip):
+		"""
+		Use the created driver to navigate to ip-secrets.com and confirm that
+		the ``ip`` provided is the one currently used. Will test for `https`
+		and `http` page requests.
+		:param ip: str - the proxy expected to be running traffic through
+		:return: NoReturn
+		"""
+		groups = re.search(r'^(\d+\.\d+\.\d+\.\d+):?(\d+)?', ip)
+		if groups is None:
+			raise ValueError(
+				'The proxy addess provided ({}) is not a valid address.'.format(
+					ip))
+		else:
+			ip_address = groups.group(1)
+			# port = groups.group(2) #port not used for the verification
+		self.driver.get('https://www.ip-secrets.com/')
+		page_source = self.driver.page_source
+		if ip_address not in page_source:
+			raise AssertionError('The provided IP address ({}) is not set '
+			                     'for ssl page requests.'.format(ip_address))
+		self.log.info('Proxy (%s) passed the ssl page requests test.' % ip)
+		self.driver.get('http://www.ip-secrets.com/')
+		page_source = self.driver.page_source
+		if ip_address not in page_source:
+			raise AssertionError('The provided IP address ({}) is not set '
+			                     'for http page requests.'.format(ip_address))
+		self.log.info('Proxy (%s) passed the http page requests test.' % ip)
+
 	def set_implicit_wait(self, time_to_wait):
+		"""
+		Set the time in seconds for the driver to wait for pages/elements.
+		This is implemented by the browser's driver and not selenium. As a
+		result, behaviour can be unexpected as it is barely documented and
+		each browser might have different implementations.
+
+		Recommend using explicit waits or the wait functions in `waiting.py`
+
+		:param time_to_wait: int - time to wait in seconds
+		:return: NoReturn
+		"""
 		self.driver.implicitly_wait(time_to_wait)
 		self.implicit_wait = time_to_wait
 
 	def unset_implicit_wait(self):
+		"""Sets implicit_wait to 0, effectively disabling it."""
 		self.driver.implicitly_wait(0)
 		self.implicit_wait = 0
 

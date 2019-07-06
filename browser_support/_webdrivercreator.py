@@ -33,7 +33,6 @@ class WebDriverCreator:
 	def __init__(self):
 		self.log = Logger().log
 
-
 	def create_driver(self, browser, desired_capabilities=None, profile=None, options=None):
 		"""
 		Main function that will make the browser's driver
@@ -50,7 +49,6 @@ class WebDriverCreator:
 		creation_method = self.get_creation_method(browser)
 
 		return creation_method(desired_capabilities, profile, options)
-
 
 	def get_creation_method(self, browser):
 		"""
@@ -80,7 +78,6 @@ class WebDriverCreator:
 			desired_capabilities = {}
 		return webdriver.Chrome(desired_capabilities=desired_capabilities, options=options)
 
-
 	def create_headless_chrome(self, desired_capabilities, profile, options):
 		if profile is not None:
 			self.log.warning('Chrome was instantiated with a profile which is a firefox exclusive parameter.')
@@ -88,7 +85,6 @@ class WebDriverCreator:
 			options = webdriver.ChromeOptions()
 		options.headless = True
 		return self.create_chrome(desired_capabilities, profile, options)
-
 
 	def create_firefox(self, desired_capabilities, profile, options):
 		if desired_capabilities is not None:
@@ -99,13 +95,11 @@ class WebDriverCreator:
 			desired_capabilities = {}
 		return webdriver.Firefox(desired_capabilities=desired_capabilities, firefox_profile=profile, options=options)
 
-
 	def create_headless_firefox(self, desired_capabilities, profile, options):
 		if options is None:
 			options = webdriver.FirefoxOptions()
 		options.headless = True
 		return self.create_firefox(desired_capabilities, profile, options)
-
 
 	def create_ie(self, desired_capabilities, profile, options):
 		if profile is not None:
@@ -117,7 +111,6 @@ class WebDriverCreator:
 		else:
 			desired_capabilities = {}
 		return webdriver.Ie(desired_capabilities=desired_capabilities, options=options)
-
 
 	def create_edge(self, desired_capabilities, profile, options):
 		if profile is not None:

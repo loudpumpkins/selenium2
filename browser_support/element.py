@@ -259,19 +259,19 @@ class Element(Base):
 					return True
 			return False
 
-	def press_keys(self, locator=None, *keys):
+	def send_keys(self, locator=None, *keys):
 		"""
 		Send keys to element or page. Use `None` as locator to send keys to page
 		Can chain keys with `+` or provide as separate function arguments
 
 		Example:
-		_.press_keys('#myElem', 'my word')         sends 'my word'
-		_.press_keys(None, 'F12')                  sends 'F12' to browser
-		_.press_keys('#myElem', 'w+o+r+d')         sends 'word'
-		_.press_keys('#myElem', 'my', ' ', 'word') sends 'my word'
-		_.press_keys('#myElem', 'my+ +word')       same as above
-		_.press_keys('#myElem', 'CTRL+a')          holds 'CTRL', send a, release 'CTRL'
-		_.press_keys('#myElem', 'CTRL', 'a')       same as above
+		_.send_keys('#myElem', 'my word')         sends 'my word'
+		_.send_keys(None, 'F12')                  sends 'F12' to browser
+		_.send_keys('#myElem', 'w+o+r+d')         sends 'word'
+		_.send_keys('#myElem', 'my', ' ', 'word') sends 'my word'
+		_.send_keys('#myElem', 'my+ +word')       same as above
+		_.send_keys('#myElem', 'CTRL+a')          holds 'CTRL', send a, release 'CTRL'
+		_.send_keys('#myElem', 'CTRL', 'a')       same as above
 
 		`` special keys ``
 		ADD, ALT, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT, ARROW_UP, BACKSPACE
