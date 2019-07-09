@@ -259,6 +259,28 @@ class Element(Base):
 					return True
 			return False
 
+	def right_click_element_at_coordinates(self, locator, xoffset, yoffset):
+		"""
+		Cursor is moved at the center of the element and x/y coordinates are
+		calculated from that point.
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
+
+		:param locator: WebEelement or str
+		:param xoffset: X offset to move to, as a positive or negative integer.
+		:param yoffset: Y offset to move to, as a positive or negative integer.
+		:return:
+		"""
+		self.log.info('Clicking element {} at coordinates x={}, y={}'.format(
+			locator, xoffset, yoffset
+		))
+		element = self.find_element(locator)
+		action = ActionChains(self.driver)
+		action.move_to_element(element)
+		action.move_by_offset(xoffset, yoffset)
+		action.context_click()
+		action.perform()
+
 	def send_keys(self, locator=None, *keys):
 		"""
 		Send keys to element or page. Use `None` as locator to send keys to page

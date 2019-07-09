@@ -17,7 +17,8 @@ class Waiting(Base):
 		self.log = Logger().log
 
 
-	def wait_for_element(self, locator, negate=False, timeout=DEFAULT_TIMEOUT):
+	def wait_for_element(self, locator, negate=False, timeout=DEFAULT_TIMEOUT,
+	                     parent=None):
 		"""
 		Wait for `element` and return it if found or raise timeoutException
 
@@ -30,9 +31,10 @@ class Waiting(Base):
 		:param negate: bool - True will wait for condition to be truthy, False
 			will wait for the condition to be falsy
 		:param timeout: int - explicit wait timeout in seconds
+		:param parent: WebElement or Driver by default
 		:return: WebElement or TimeoutException
 		"""
-		func = lambda _: self.find_element(locator, required=False)
+		func = lambda _: self.find_element(locator, required=False, parent=parent)
 		if negate:
 			self.log.info(
 				'Waiting for element `{}` to not be present.'.format(locator))
@@ -68,13 +70,15 @@ class Waiting(Base):
 				'Waiting for element `{}` to be disabled.'.format(locator))
 			message = ('Failed to wait for element `{}` to be disabled before '
 			           'the timeout [{} second(s)].'.format(locator, timeout))
-			return self._wait_until_not(func, timeout, message)
+			self._wait_until_not(func, timeout, message)
+			return self.find_element(locator, required=False)
 		else:
 			self.log.info(
 				'Waiting for element `{}` to be enabled.'.format(locator))
 			message = ('Failed to wait for element `{}` to be enabled before '
 			           'the timeout [{} second(s)].'.format(locator, timeout))
-			return self._wait_until(func, timeout, message)
+			self._wait_until(func, timeout, message)
+			return self.find_element(locator, required=False)
 
 	def wait_for_element_to_be_visible(self, locator, negate=False,
 	                                   timeout=DEFAULT_TIMEOUT):
@@ -104,13 +108,15 @@ class Waiting(Base):
 				'Waiting for element `{}` to be invisible.'.format(locator))
 			message = ('Failed to wait for element `{}` to be invisible before'
 			           ' the timeout [{} seconds].'.format(locator, timeout))
-			return self._wait_until_not(func, timeout, message)
+			self._wait_until_not(func, timeout, message)
+			return self.find_element(locator, required=False)
 		else:
 			self.log.info(
 				'Waiting for element `{}` to be visible.'.format(locator))
 			message = ('Failed to wait for element `{}` to be visible before'
 			           ' the timeout [{} seconds].'.format(locator, timeout))
-			return self._wait_until(func, timeout, message)
+			self._wait_until(func, timeout, message)
+			return self.find_element(locator, required=False)
 
 	def wait_for_element_to_contain(self, locator, text, negate=False,
 	                                timeout=DEFAULT_TIMEOUT):
@@ -135,13 +141,15 @@ class Waiting(Base):
 				'Waiting for element `{}` to not contain {}.'.format(locator, text))
 			message = ('Failed to wait for element `{}` to not contain `{}` before'
 			           ' the timeout [{} seconds].'.format(locator, text, timeout))
-			return self._wait_until_not(func, timeout, message)
+			self._wait_until_not(func, timeout, message)
+			return self.find_element(locator, required=False)
 		else:
 			self.log.info(
 				'Waiting for element `{}` to contain {}.'.format(locator, text))
 			message = ('Failed to wait for element `{}` to contain `{}` before'
 			           ' the timeout [{} seconds].'.format(locator, text, timeout))
-			return self._wait_until(func, timeout, message)
+			self._wait_until(func, timeout, message)
+			return self.find_element(locator, required=False)
 
 	def wait_for_script(self, script, negate=False, timeout=DEFAULT_TIMEOUT,
 	                    message='Condition `{}` not met before the timeout.'):
