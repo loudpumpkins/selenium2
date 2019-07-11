@@ -284,16 +284,13 @@ class Element(Base):
 	def send_keys(self, locator=None, *keys):
 		"""
 		Send keys to element or page. Use `None` as locator to send keys to page
-		Can chain keys with `+` or provide as separate function arguments
+		Can chain keys by providing separate function arguments
 
 		Example:
 		_.send_keys('#myElem', 'my word')         sends 'my word'
 		_.send_keys(None, 'F12')                  sends 'F12' to browser
-		_.send_keys('#myElem', 'w+o+r+d')         sends 'word'
 		_.send_keys('#myElem', 'my', ' ', 'word') sends 'my word'
-		_.send_keys('#myElem', 'my+ +word')       same as above
-		_.send_keys('#myElem', 'CTRL+a')          holds 'CTRL', send a, release 'CTRL'
-		_.send_keys('#myElem', 'CTRL', 'a')       same as above
+		_.send_keys('#myElem', 'CTRL', 'a')       holds 'CTRL', send a, release 'CTRL'
 
 		`` special keys ``
 		ADD, ALT, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT, ARROW_UP, BACKSPACE
@@ -540,17 +537,18 @@ class Element(Base):
 			return False
 
 	def _separate_key(self, key):
-		one_key = ''
-		list_keys = []
-		for char in key:
-			if char == '+' and one_key != '':
-				list_keys.append(one_key)
-				one_key = ''
-			else:
-				one_key += char
-		if one_key:
-			list_keys.append(one_key)
-		return list_keys
+		# one_key = ''
+		# list_keys = []
+		# for char in key:
+		# 	if char == '+' and one_key != '':
+		# 		list_keys.append(one_key)
+		# 		one_key = ''
+		# 	else:
+		# 		one_key += char
+		# if one_key:
+		# 	list_keys.append(one_key)
+		# return list_keys
+		return [key] # TODO refactor sub optimal code
 
 	######################################################
 	### END of snippet from Robot Framework Foundation ###
