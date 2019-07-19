@@ -92,11 +92,12 @@ class Kijiji:
 			raise RuntimeError('Attempted to delete oldest ad, but the user is '
 			                   'not signed in.')
 		self.driver.goto(self.my_ads) #(1)
+		self.driver.wait_for_element('//li[starts-with(@class,"item")]')
 		ads = self.driver.find_elements('//li[starts-with(@class,"item")]') #(2)
 		if ads:
 			raw_id = ads[-1].get_attribute('data-qa-id')
 			ad_id = "".join(filter(str.isdigit, raw_id)) # remove prefix 'ad-id-...'
-			self.driver.find_element('.//button[starts-with(@class,"actionLink-")]',
+			self.driver.wait_for_element('.//button[starts-with(@class,"actionLink-")]',
 			                         parent=ads[-1]).click() #(3)
 			self.log.info('Deleting oldest ad. ID: %s' % ad_id)
 			response = self.driver.wait_for_element( #(4)
@@ -140,7 +141,7 @@ class Kijiji:
 		:return: bool - True for logged in
 		"""
 		try:
-			self.driver.wait_for_element("//div[contains(@class,'container__loggedIn')]")
+			self.driver.wait_for_element("//button[starts-with(@class,'cont')]")
 			self.log.info('Asserted user is logged in.')
 			return True
 		except:
