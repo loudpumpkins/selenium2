@@ -133,7 +133,7 @@ class Kijiji:
 
 	def is_signed_in(self)->bool:
 		"""
-		Will look for notifications icon (the bell) which is available only if
+		Will look for menu icon (profile avatar) which is available only if
 		the user is logged in
 		To assert that user is signed out, use "is_signed_out()" method as it
 		is faster.
@@ -141,7 +141,7 @@ class Kijiji:
 		:return: bool - True for logged in
 		"""
 		try:
-			self.driver.wait_for_element("//button[starts-with(@class,'cont')]")
+			self.driver.wait_for_element("//button[starts-with(@class,'control-')]")
 			self.log.info('Asserted user is logged in.')
 			return True
 		except:
