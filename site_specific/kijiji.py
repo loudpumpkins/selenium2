@@ -2,6 +2,7 @@ from ..config import *
 
 # external
 from typing import Any, Callable, List, NamedTuple, NoReturn, Union as U, Tuple
+from time import sleep
 
 # internal
 from ..browser import Browser
@@ -19,6 +20,8 @@ class Kijiji:
 	my_orders = 'https://www.kijiji.ca/t-my-orders.html'
 	my_profile = 'https://www.kijiji.ca/o-profile/1017207992/1'
 	my_settings = 'https://www.kijiji.ca/t-settings.html'
+	select_category = 'https://www.kijiji.ca/p-post-ad.html?categoryId={}'
+	select_location = 'https://www.kijiji.ca/b-buy-sell/guelph/c10l{}'
 	sign_in_page = 'https://www.kijiji.ca/t-login.html'
 
 	def __init__(self, driver: U[Browser,str], desired_capabilities: dict = None,
@@ -45,10 +48,46 @@ class Kijiji:
 			'span[starts-with(@class,"filterButtonCounter-")]')
 		return int(active.text)
 
+	def delete_ad_with_id(self, id:str)->str:
+		"""
+		Delete ad with a specific id.
+
+			Steps:
+			  (1) - Go to my ads
+			  (2) - Order ads by oldest first
+			  (3) - Select all active ads
+			  (4) - Iterate through the elements to find the ad with `id`
+			  (5) - Delete the ad
+
+		:param id: str
+		:return: ad_id or None
+		"""
+		self.log.info('Deleting ad with id ["%s"].' % id)
+		if not self.is_signed_in():
+			raise RuntimeError('Attempted to delete oldest ad, but the user is '
+			                   'not signed in.')
+		self.driver.goto(self.my_ads)  # (1)
+		self._sort_my_ads() # (2)
+		self.driver.wait_for_element('//li[starts-with(@class,"item")]')
+		ads = self.driver.find_elements('//li[starts-with(@class,"item")]')  # (3)
+		for ad in ads: # (4)
+			if id in ad.get_attribute('data-qa-id'):
+				self.driver.wait_for_element(
+					'.//button[starts-with(@class,"actionLink-")]',
+					parent=ad).click() # (5)
+				response = self.driver.wait_for_element(
+					'.//div[contains(@class,"container__success")]/*[starts-with(@class,"messageTitle")]',
+					parent=ad)
+				self.log.info("Deleted oldest add. Kijiji [SUCCESS] msg: %s"
+				              % response.text)
+				return id
+		self.log.info('Failed to delete ad id ["%s"]. Not found.' % id)
+		return None
+
 	def delete_all_ads(self)->bool:
 		"""
 		Attempts to delete all ads and returns True of None are left
-		regardless of if any were active or not and False otherwise.
+		regardless of if any were active or not or Raise exception otherwise.
 			Steps:
 			  (1) - Go to my ads
 			  (2) - Select all active ads
@@ -75,41 +114,50 @@ class Kijiji:
 		self.driver.goto(self.my_ads)  #(5)
 		return self.driver.wait_for_page_to_contain('have no active ads')
 
-
-	def delete_oldest_ad(self)->str:
+	def delete_oldest_ad_of_category(self, user_bread_crumbs:str)->str:
 		"""
-		Deletes only the oldest ad and returns the ID of the ad as a str or
-		None if failed.
+		Delete the oldest ad within a specific category. The category is
+		identified via the user bread crumbs.
+
+		 Bread Crumbs examples:
+		   - example: "Buy & Sell > Furniture > Coffee Tables"
+		   - user:    "Buy & Sell > Furniture > Coffee Tables Change category"
+
 			Steps:
 			  (1) - Go to my ads
-			  (2) - Select all active ads
-			  (3) - Select and click the `delete` link of the last ad
-			  (4) - Assert `deleted successfully` message
+			  (2) - Order ads by oldest first
+			  (3) - Select all active ads
+			  (4) - Iterate through the ads to find the AdId of the oldest ad
+			  (5) - Call delete_ad_with_id()
 
+		:param bread_crumbs: str - "Buy & Sell > Furniture > Coffee Tables"
 		:return: str - the ID of the ad deleted
 		"""
+		self.log.info('Deleting oldest ad with the category: ["%s"].'
+		              % user_bread_crumbs)
 		if not self.is_signed_in():
 			raise RuntimeError('Attempted to delete oldest ad, but the user is '
 			                   'not signed in.')
 		self.driver.goto(self.my_ads) #(1)
+		self._sort_my_ads() #(2)
 		self.driver.wait_for_element('//li[starts-with(@class,"item")]')
-		ads = self.driver.find_elements('//li[starts-with(@class,"item")]') #(2)
-		if ads:
-			raw_id = ads[-1].get_attribute('data-qa-id')
-			ad_id = "".join(filter(str.isdigit, raw_id)) # remove prefix 'ad-id-...'
-			self.driver.wait_for_element('.//button[starts-with(@class,"actionLink-")]',
-			                         parent=ads[-1]).click() #(3)
-			self.log.info('Deleting oldest ad. ID: %s' % ad_id)
-			response = self.driver.wait_for_element( #(4)
-				'.//div[contains(@class,"container__success")]/*[starts-with(@class,"messageTitle")]',
-				parent=ads[-1])
-			self.log.info("Deleted oldest add. Kijiji [SUCCESS] msg: %s"
-			              % response.text)
-			return ad_id
-		else:
-			self.log.info('Attempting to delete the oldest ad, but none were '
-			              'found.')
-			return None
+		ads = self.driver.find_elements('//li[starts-with(@class,"item")]') #(3)
+		urls:List[Tuple] = [] #('href','adId')
+		for ad in ads: # (4)
+			href = self.driver.find_element(
+				parent=ad,
+				locator=".//a[starts-with(@class,'actionLink')]"
+			).get_attribute('href')
+			raw_id = ad.get_attribute('data-qa-id')
+			ad_id = "".join(
+				filter(str.isdigit, raw_id))  # remove prefix 'ad-id-...'
+			urls.append((href,ad_id))
+		for url in urls:
+			self.driver.goto(url[0])
+			current_bread_crumbs = self.driver.find_element(
+				"//li[@class='category']/div[@class='form-section']").text
+			if current_bread_crumbs	in user_bread_crumbs:
+				return self.delete_ad_with_id(url[1]) # (5)
 
 	def get_active_posts_ids(self)->List[str]:
 		"""
@@ -203,8 +251,59 @@ class Kijiji:
 	def new_messages(self)->int:
 		pass
 
-	def post_ad(self, data: dict):
-		pass
+	def post_ad(self, details:List[dict], setup:dict, preview:bool=False)->str:
+		"""
+		Populate the post page with user's details, submit form and return the
+		ad ID as a string.
+
+		Steps:
+		  (1) - Select user's location
+		  (2) - Go to post page
+		  (3) - Delete oldest ad if the user reached the post limit in
+		        selected category
+		  (4) - Upload all ad images
+		  (5) - Populate user's details
+		  (6) - Dismiss `select plan` and `policy` if present
+		  (7) - Post the ad
+
+		:param details: [{'name':[...], 'value':[...]}, [...]]
+		:param setup: {
+						'location_id': [...],
+						'category_id': [...],
+						'images_path': [...],
+					  }
+		:return:
+		"""
+		self._select_location(setup['location_id']) # (1)
+		self._go_to_post_page(setup['category_id']) # (2)
+		limit_message = self.driver.find_element(
+			"//div[@id='PostingLimitMessage']//span[contains(@class,'tip-body')]",
+			required=False
+		)
+		if limit_message is not None:
+			limit_message = limit_message.text
+			if 'You have reached your limit of' in limit_message: # (3)
+				self.delete_oldest_ad_of_category(setup['bread_crumbs'])
+				self._go_to_post_page(setup['category_id'])
+				limit_message = self.driver.find_element(
+					"//div[@id='PostingLimitMessage']//span[contains(@class,'tip-body')]",
+				).text
+				if 'You have reached your limit of' in limit_message:
+					raise RuntimeError(
+						'Category limit still maxed after deleting oldest ad.')
+		self._upload_images(setup['images_path']) # (4)
+		for detail in details:
+			self._send_detail(detail) # (5)
+		self._dismiss_obstacles() # (6)
+		if preview: # (7)
+			self._preview_post()
+			self.log.info('Execution frozen - posted as `preview`.')
+			sleep(9999)
+		else:
+			self._submit_post()
+		self._assert_post_sucess()
+		return self.driver.wait_for_element(
+			'//a[starts-with(@class,"adId-")]').text
 
 	def reply_to_new_messages(self)->NoReturn:
 		pass
@@ -277,13 +376,224 @@ class Kijiji:
 				raise RuntimeError('Failed assert that the user is either '
 				                   'signed in or signed out.')
 
-	def _post_success(self)->bool:
+	def _dismiss_obstacles(self):
+		"""Dismiss 'plan selection' and 'policy acknowledgement' if present"""
+		term_confirmation = self.driver.find_element(
+			"#PostAdConfirmationOfTerms",
+			required=False
+		)
+		if term_confirmation is not None:
+			self.driver.click_element("//label[@for='PostAdConfirmationOfTerms']")
+
+		plan_selection = self.driver.find_element(
+			"//button[starts-with(@data-qa-id,'package-0-bottom')]",
+			required=False
+		)
+		if plan_selection is not None:
+			self.driver.click_element(plan_selection)
+
+	def _go_to_post_page(self, category_id:U[str, int])->NoReturn:
+		"""
+		Go to the category page to post ad in.
+		:param category_id: int or str
+		:return: NoReturn
+		"""
+		self.driver.log.info('Switching to post page of category ID: "%s"' % category_id)
+		self.driver.goto(self.select_category.format(category_id))
+
+	def _assert_post_sucess(self)->NoReturn:
 		#log URL to analyse behaviour for now, might change success criteria to
 		#be based on the URL if it is consistent.
+		self.driver.wait_for_page_to_contain(
+			'You have successfully posted your ad')
 		url = self.driver.get_url()
 		if 'posted=true' not in url and 'Activated=true' not in url:
 			self.log.critical("URL's GET variables 'posted' or 'activated' "
 			                  "where not set to TRUE by Kijiji.\nFull url: %s"
 			                  % url)
-		return self.driver.wait_for_page_to_contain(
-			'You have successfully posted your ad')
+
+	def _preview_post(self, attempts:int=1)->NoReturn:
+		"""
+		Try to preview form recursively for 4 seconds. Delays can occur after
+		selecting a plan making the preview button temporarily unavailable.
+		:param attempts: int
+		:return: NoReturn
+		"""
+		if attempts <= 8:
+			try:
+				self.driver.simulate_event(
+					'//button[@class="button-task secondary post-ad-button"]',
+					'click'
+				)
+			except:
+				sleep(0.5)
+				self._preview_post(attempts+1)
+		else:
+			raise RuntimeError('Failed to preview form after %s attempts.'
+			                   % attempts)
+
+	def _select_location(self, location_id:U[str, int])->NoReturn:
+		"""
+		Change user location via URL change.
+		:param location_id: str or int
+		:return: NoReturn
+		"""
+		self.driver.log.info('Selecting user location: "%s"' % location_id)
+		self.driver.goto(self.select_location.format(location_id))
+
+	def _send_detail(self, detail:dict)->NoReturn:
+		"""
+		Populate a specific user's detail into the post ad form.
+		Elements are matched by 'name' and the 'value' could be the
+		input text or input ID depending on element.
+
+		Element types:
+		  TEXTAREA = 1
+		  TEXT = 2
+		  SELECT = 3
+		  RADIO = 4
+		  CHECKBOX = 5
+		  OTHER = 6
+
+		:param detail: {'name':[...], 'value':[...]}
+		:return: NoReturn
+		"""
+		skip_field_names = ['']
+		if detail['name'] == 'location':
+			change_loc = self.driver.find_element(
+				"//button[starts-with(@class,'changeLocationButton')]",
+				required=False
+			)
+			if change_loc is not None:
+				change_loc.click()
+			self.driver.wait_for_element(
+				"//textarea[@id='location']").send_keys(detail['value'])
+			self.driver.wait_for_element(
+				"//div[starts-with(@class,'autocompleteSuggestions')]/div[starts-with(@id,'downshift')]"
+			).click()
+			return
+
+		element_type = self._set_detail_type(detail['name'])
+		if element_type <= 2: # TEXT and TEXTAREA
+			self.driver.send_keys(
+				"//{}[@name='{}']".format(
+					'input' if element_type == 2 else 'textarea', detail['name']),
+				detail['value'])
+			# self.driver.send_keys(None, 'TAB')
+		elif element_type == 3: # SELECT
+			self.driver.select_from_list_by_label(
+				"//select[@name='%s']" % detail['name'],
+				detail['value']
+			)
+		elif element_type <= 5: # RADIO and CHECKBOX
+			label = self.driver.find_element(
+				"//label[@for='%s']" % detail['value'])
+			if self.driver.is_visible(label):
+				label.click()
+			else:
+				self.log.info("######################### NOTE VISIBLE ###################")
+				self.driver.scroll_element_into_view(label)
+				sleep(0.5)
+				label.click()
+		else:
+			self.log.critical('Failed to populate a user`s detail. Name: [%s] ,'
+			                  'value: [%s].' % (detail['name'], detail['value']))
+
+	def _set_detail_type(self, element_name:str)->int:
+		"""Set the element type of a user's detail"""
+		# element types
+		TEXTAREA = 1
+		TEXT = 2
+		SELECT = 3
+		RADIO = 4
+		CHECKBOX = 5
+		OTHER = 6
+
+		if self.driver.find_element(
+				"//textarea[@name='"+element_name+"']",
+				required=False
+			) is not None:
+			return TEXTAREA
+		elif self.driver.find_element(
+				"//input[@name='"+element_name+"']",
+				required=False
+			) is not None:
+			type_attribute = self.driver.find_element(
+				"//input[@name='"+element_name+"']",
+			).get_attribute('type')
+			if type_attribute.lower() == 'text':
+				return TEXT
+			elif type_attribute.lower() == 'radio':
+				return RADIO
+			elif type_attribute.lower() == 'checkbox':
+				return CHECKBOX
+			else:
+				return OTHER
+		elif self.driver.find_element(
+				"//select[@name='"+element_name+"']",
+				required=False
+			) is not None:
+			return SELECT
+		else:
+			return OTHER
+
+	def _sort_my_ads(self):
+		""" Sorts ads from oldest to newest. *via expiration date* """
+		self.log.info('Sorting ads by expiration date.')
+		className = self.driver.wait_for_element(
+			"//ul[starts-with(@class,'expiresList')]//button/*", # SVG element
+		).get_attribute('class')
+		while 'isSelected' not in className or 'ascending' not in className:
+			self.driver.click_element(
+				"//ul[starts-with(@class,'expiresList')]//button")
+			className = self.driver.find_element(
+				"//ul[starts-with(@class,'expiresList')]//button/*", # SVG element
+			).get_attribute('class')
+			sleep(1)
+
+	def _submit_post(self, attempts: int=1)->NoReturn:
+		"""
+		Try to submit form recursively for 4 seconds. Delays can occur after
+		selecting a plan making the submit button temporarily unavailable.
+		:param attempts: int
+		:return: NoReturn
+		"""
+		if attempts <= 8:
+			try:
+				self.driver.find_element(
+					"//form[starts-with(@id,'PostAd')]").submit()
+			except:
+				sleep(0.5)
+				self._submit_post(attempts+1)
+		else:
+			raise RuntimeError('Failed to submit form after %s attempts.'
+			                   % attempts)
+
+	def _upload_images(self, path:str)->NoReturn:
+		"""
+		Send the absolute path of each file in `path` to kijiji's image field,
+		effectively, uploading it.
+		:param path: str - absolute path of the images location
+		:return: NoReturn
+		"""
+		self.driver.log.info('Uploading images.')
+		files = [os.path.join(path, f) for f in os.listdir(path)
+		         if os.path.isfile(os.path.join(path, f))]
+		if len(files) > 0:
+			files_string = '\n'.join(files)
+			upload_inp = self.driver.find_element('//input[starts-with(@id,"html5")]')
+			upload_inp.send_keys(files_string)
+			iterations = 1
+			while self.driver.find_element('//li[@class="uploading thumbnail"]',
+			                      required=False) is None:
+				self.driver.log.info('Waiting for `images loading` icon.')
+				sleep(0.5)
+				iterations = iterations + 1
+				if iterations > 20:  # wait up 10 seconds
+					self.driver.log.info('Failed to find `images loading` icon.')
+					break
+			self.driver.wait_for_element('//li[@class="uploading thumbnail"]', negate=True,
+			                    timeout=120)
+			self.log_alert_message()
+		else:
+			self.driver.log.info('No images to upload.')

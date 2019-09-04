@@ -261,6 +261,7 @@ class Selects(Base):
 		return self._get_select_list(locator).all_selected_options
 
 	def _get_select_list(self, locator):
-		el = self.find_element(locator, tag='list')
+		# el = self.find_element(locator, tag='list')
+		el = self.find_element(locator)
 		return Select(el)
 
