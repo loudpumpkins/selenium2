@@ -19,5 +19,11 @@ class Driver:
 
 	@property
 	def driver(self):
+		"""
+		`root` function argument is an instance of Browser.
+		This is a @property as the Browser's `driver` will also be a @property
+		with a driver manager (multiple drivers) in future updates.
+		:return: WebDriver (current active driver)
+		"""
 		driver: WebDriver = self._root.driver
 		return driver

@@ -1,6 +1,7 @@
 from ..config import *
 
 # external
+from selenium.common.exceptions import TimeoutException
 from typing import Any, Callable, List, NamedTuple, NoReturn, Union as U, Tuple
 from time import sleep
 
@@ -48,7 +49,7 @@ class Kijiji:
 			'span[starts-with(@class,"filterButtonCounter-")]')
 		return int(active.text)
 
-	def delete_ad_with_id(self, id:str)->str:
+	def delete_ad_with_id(self, ad_id:Any)->bool:
 		"""
 		Delete ad with a specific id.
 
@@ -59,41 +60,41 @@ class Kijiji:
 			  (4) - Iterate through the elements to find the ad with `id`
 			  (5) - Delete the ad
 
-		:param id: str
-		:return: ad_id or None
+		:param ad_id: int
+		:return: bool (True for success, False otherwise)
 		"""
-		self.log.info('Deleting ad with id ["%s"].' % id)
+		self.log.info('Deleting ad with id ["%s"].' % ad_id)
 		if not self.is_signed_in():
 			raise RuntimeError('Attempted to delete oldest ad, but the user is '
-			                   'not signed in.')
+			                   'not signed in. You must sign in first.')
 		self.driver.goto(self.my_ads)  # (1)
-		self._sort_my_ads() # (2)
-		self.driver.wait_for_element('//li[starts-with(@class,"item")]')
+		try:
+			self._sort_my_ads() # (2)
+			self.driver.wait_for_element('//li[starts-with(@class,"item")]')
+		except Exception as e:
+			self.log.info('Unable to sort ads [no ads in My Ads]: ' + str(e).replace('\n', ''))
+			return False
 		ads = self.driver.find_elements('//li[starts-with(@class,"item")]')  # (3)
 		for ad in ads: # (4)
-			if id in ad.get_attribute('data-qa-id'):
+			if str(ad_id) in ad.get_attribute('data-qa-id'):
 				self.driver.wait_for_element(
 					'.//button[starts-with(@class,"actionLink-")]',
 					parent=ad).click() # (5)
-				response = self.driver.wait_for_element(
-					'.//div[contains(@class,"container__success")]/*[starts-with(@class,"messageTitle")]',
-					parent=ad)
-				self.log.info("Deleted oldest add. Kijiji [SUCCESS] msg: %s"
-				              % response.text)
-				return id
-		self.log.info('Failed to delete ad id ["%s"]. Not found.' % id)
-		return None
+				self.log.info("Deleted ad with ID: [%s]."
+				              % ad_id)
+				return True
+		self.log.info('Failed to delete ad id ["%s"]. Not found.' % ad_id)
+		return False
 
-	def delete_all_ads(self)->bool:
+	def delete_all_ads(self, previous:int = -1)->bool:
 		"""
-		Attempts to delete all ads and returns True of None are left
+		Attempts to delete all ads and returns True if None are left
 		regardless of if any were active or not or Raise exception otherwise.
 			Steps:
 			  (1) - Go to my ads
 			  (2) - Select all active ads
 			  (3) - Iterate through the ads and click the `Delete` link
-			  (4) - Assert `deleted successfully` message
-			  (5) - Go to my ads again and see if any are active
+			  (4) - Go to my ads again and see if any are active
 
 		:return: bool
 		"""
@@ -101,20 +102,24 @@ class Kijiji:
 			raise RuntimeError('Attempted to delete all ads, but the user is '
 			                   'not signed in.')
 		self.driver.goto(self.my_ads) #(1)
-		ads = self.driver.find_elements('//li[starts-with(@class,"item")]') #(2)
-		self.log.info("Deleting all ads.")
+		self.driver.wait_for_element('//li[starts-with(@class,"item")]')
+		ads = self.driver.find_elements('//li[starts-with(@class,"item")]') # (2)
+		if ads == previous: # prevents infinite recursion
+			raise RuntimeError('Attempted to delete all ads, but recursion has '
+			                   'no effect on number of ads left. (infinite recursion)')
+		self.log.info("Deleting all ads [%s total]." % len(ads))
 		for ad in ads:
-			self.driver.find_element('.//button[starts-with(@class,"actionLink-")]',
+			self.log.info("Deleted an ad.")
+			self.driver.wait_for_element('.//button[starts-with(@class,"actionLink-")]',
 			                         parent=ad).click() #(3)
-			response = self.driver.wait_for_element( #(4)
-				'.//div[contains(@class,"container__success")]/*[starts-with(@class,"messageTitle")]',
-				parent=ad)
-			self.log.info("Deleted an ad. Kijiji [SUCCESS] msg: %s"
-			              % response.text)
-		self.driver.goto(self.my_ads)  #(5)
-		return self.driver.wait_for_page_to_contain('have no active ads')
+			sleep(2)
+		self.driver.goto(self.my_ads)  #(4)
+		try:
+			return self.driver.wait_for_page_to_contain('have no active ads')
+		except TimeoutException:
+			return self.delete_all_ads(len(ads))
 
-	def delete_oldest_ad_of_category(self, user_bread_crumbs:str)->str:
+	def delete_oldest_ad_of_category(self, user_bread_crumbs:str)->bool:
 		"""
 		Delete the oldest ad within a specific category. The category is
 		identified via the user bread crumbs.
@@ -139,12 +144,17 @@ class Kijiji:
 			raise RuntimeError('Attempted to delete oldest ad, but the user is '
 			                   'not signed in.')
 		self.driver.goto(self.my_ads) #(1)
-		self._sort_my_ads() #(2)
-		self.driver.wait_for_element('//li[starts-with(@class,"item")]')
+		try:
+			self._sort_my_ads() #(2)
+			self.driver.wait_for_element('//li[starts-with(@class,"item")]')
+		except Exception as e:
+			self.log.info(
+				'Unable to sort ads [no ads in My Ads]: ' + str(e).replace('\n',''))
+			return False
 		ads = self.driver.find_elements('//li[starts-with(@class,"item")]') #(3)
 		urls:List[Tuple] = [] #('href','adId')
 		for ad in ads: # (4)
-			href = self.driver.find_element(
+			href = self.driver.wait_for_element(
 				parent=ad,
 				locator=".//a[starts-with(@class,'actionLink')]"
 			).get_attribute('href')
@@ -264,7 +274,7 @@ class Kijiji:
 		  (4) - Upload all ad images
 		  (5) - Populate user's details
 		  (6) - Dismiss `select plan` and `policy` if present
-		  (7) - Post the ad
+		  (7) - Post or Preview the ad
 
 		:param details: [{'name':[...], 'value':[...]}, [...]]
 		:param setup: {
@@ -284,13 +294,19 @@ class Kijiji:
 			limit_message = limit_message.text
 			if 'You have reached your limit of' in limit_message: # (3)
 				self.delete_oldest_ad_of_category(setup['bread_crumbs'])
-				self._go_to_post_page(setup['category_id'])
-				limit_message = self.driver.find_element(
-					"//div[@id='PostingLimitMessage']//span[contains(@class,'tip-body')]",
-				).text
-				if 'You have reached your limit of' in limit_message:
-					raise RuntimeError(
-						'Category limit still maxed after deleting oldest ad.')
+				for e in range(5):
+					self._go_to_post_page(setup['category_id'])
+					limit_message = self.driver.find_element(
+						"//div[@id='PostingLimitMessage']//span[contains(@class,'tip-body')]",
+					).text
+					if e == 4:
+						raise RuntimeError( # limit message still present after trying 4 times
+							'Category limit still maxed after deleting oldest ad.')
+					elif 'You have reached your limit of' in limit_message:
+						sleep(1)
+						continue # limit message still present, wait a second and check again
+					else:
+						break # limit message removed, proceed
 		self._upload_images(setup['images_path']) # (4)
 		for detail in details:
 			self._send_detail(detail) # (5)
@@ -458,7 +474,6 @@ class Kijiji:
 		:param detail: {'name':[...], 'value':[...]}
 		:return: NoReturn
 		"""
-		skip_field_names = ['']
 		if detail['name'] == 'location':
 			change_loc = self.driver.find_element(
 				"//button[starts-with(@class,'changeLocationButton')]",
@@ -474,18 +489,18 @@ class Kijiji:
 			return
 
 		element_type = self._set_detail_type(detail['name'])
-		if element_type <= 2: # TEXT and TEXTAREA
+		if element_type <= 2: # (1) TEXTAREA and (2) TEXT
 			self.driver.send_keys(
 				"//{}[@name='{}']".format(
 					'input' if element_type == 2 else 'textarea', detail['name']),
 				detail['value'])
 			# self.driver.send_keys(None, 'TAB')
-		elif element_type == 3: # SELECT
+		elif element_type == 3: # (3) SELECT
 			self.driver.select_from_list_by_label(
 				"//select[@name='%s']" % detail['name'],
 				detail['value']
 			)
-		elif element_type <= 5: # RADIO and CHECKBOX
+		elif element_type <= 5: # (3) RADIO and (4) CHECKBOX
 			label = self.driver.find_element(
 				"//label[@for='%s']" % detail['value'])
 			if self.driver.is_visible(label):
@@ -540,13 +555,13 @@ class Kijiji:
 	def _sort_my_ads(self):
 		""" Sorts ads from oldest to newest. *via expiration date* """
 		self.log.info('Sorting ads by expiration date.')
-		className = self.driver.wait_for_element(
+		class_name = self.driver.wait_for_element(
 			"//ul[starts-with(@class,'expiresList')]//button/*", # SVG element
 		).get_attribute('class')
-		while 'isSelected' not in className or 'ascending' not in className:
+		while 'isSelected' not in class_name or 'ascending' not in class_name:
 			self.driver.click_element(
 				"//ul[starts-with(@class,'expiresList')]//button")
-			className = self.driver.find_element(
+			class_name = self.driver.find_element(
 				"//ul[starts-with(@class,'expiresList')]//button/*", # SVG element
 			).get_attribute('class')
 			sleep(1)
@@ -560,8 +575,12 @@ class Kijiji:
 		"""
 		if attempts <= 8:
 			try:
-				self.driver.find_element(
-					"//form[starts-with(@id,'PostAd')]").submit()
+				btn = self.driver.find_element("//form[starts-with(@id,'PostAd')]")
+				if 'shopping' in btn.text.lower():
+					raise RuntimeError('Unable to post as only "+ Add to Shopping '
+					                   'Cart" is availble (locked in professional '
+					                   'mode).')
+				btn.submit()
 			except:
 				sleep(0.5)
 				self._submit_post(attempts+1)

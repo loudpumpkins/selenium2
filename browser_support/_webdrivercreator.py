@@ -8,6 +8,14 @@ from ..logger import Logger
 
 
 class WebDriverCreator:
+	"""
+	Solely responsible for creating a web driver for the specified browser with
+	the desired capabilities and options. Used in browser.py.
+
+	Usage: driver = WebDriverCreator().create_driver(
+				browser, desired_capabilities, profile, options
+			)
+	"""
 
 	browser_names = {
 		'googlechrome' : 'chrome', 'gc' : 'chrome', 'chrome' : 'chrome', 'google' : 'chrome',   # chrome

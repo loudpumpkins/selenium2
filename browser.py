@@ -26,7 +26,7 @@ class Browser:
 
 	See browser.pyi for all function prototypes available to Browser.
 	More detailed documentation coming soon, but each individual function is
-	documented in their respected file.
+	documented in their respective files.
 
 	=== WebDriverCreator ===
 
@@ -37,7 +37,7 @@ class Browser:
 
 	Supported browsers: 'firefox', 'headless firefox', 'headless chrome',
 	'chrome', 'ie', 'edge'. NOTE: avoid using options and profiles if possible
-	as they will be deprecated.
+	as they will be deprecated by selenium.
 
 	Browser.__init__() arguments:
 		:param browser: A string representing the desired browser from the list
@@ -93,7 +93,7 @@ class Browser:
 
 	=== Additional functionality ===
 
-	Additional site specific methods can be imported from the ./site_specific
+	Additional site-specific methods can be imported from the ./site_specific
 	folder.
 
 	They can be instantiated directly:
