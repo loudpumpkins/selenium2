@@ -25,8 +25,14 @@ class Logger:
 	"""
 
 	def __init__(self, debug=DEBUG):
-		# Create a custom logger
+
+		# See if a log handler has already been set - avoid multiples handlers
 		logger = logging.getLogger(self.get_caller_filename())
+		if logger.hasHandlers():
+			self.log = logger
+			return
+
+		# Create a custom logger
 		logger.setLevel(logging.DEBUG) # minimum allowed level in root
 
 		# Create handlers
