@@ -199,7 +199,8 @@ class Kijiji:
 		:return: bool - True for logged in
 		"""
 		try:
-			self.driver.wait_for_element("//button[starts-with(@class,'control-')]")
+			self.driver.wait_for_element("//button[starts-with(@class,'control-')]",
+			                             timeout=40)
 			self.log.info('Asserted user is logged in.')
 			return True
 		except:
@@ -216,7 +217,7 @@ class Kijiji:
 		:return: bool - True for logged out
 		"""
 		try:
-			self.driver.wait_for_element("@Sign In")
+			self.driver.wait_for_element("@Sign In", timeout=40)
 			self.log.info('Asserted user is logged out.')
 			return True
 		except:
@@ -506,7 +507,6 @@ class Kijiji:
 			if self.driver.is_visible(label):
 				label.click()
 			else:
-				self.log.info("######################### NOTE VISIBLE ###################")
 				self.driver.scroll_element_into_view(label)
 				sleep(0.5)
 				label.click()
@@ -597,7 +597,7 @@ class Kijiji:
 		"""
 		self.driver.log.info('Uploading images.')
 		files = [os.path.join(path, f) for f in os.listdir(path)
-		         if os.path.isfile(os.path.join(path, f))]
+		         if (os.path.isfile(os.path.join(path, f)) and f != '.gitkeep')]
 		if len(files) > 0:
 			files_string = '\n'.join(files)
 			upload_inp = self.driver.find_element('//input[starts-with(@id,"html5")]')

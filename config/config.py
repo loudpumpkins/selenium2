@@ -10,13 +10,13 @@ DEFAULT_TIMEOUT = 15
 SCREENSHOT_ROOT_DIRECTORY = os.path.abspath(
 	os.path.join(
 
-		# file directory (.../selenium/config)
+		# file directory (.../selenium2/config)
 		os.path.dirname(os.path.abspath(__file__)),
 
-		# parent node (.../selenium)
+		# parent node (.../selenium2)
 		os.pardir,
 
-		# sibling node (../selenium/screenshots)
+		# sibling node (../selenium2/screenshots)
 		'screenshots'
 	)
 )
