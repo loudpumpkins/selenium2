@@ -70,11 +70,13 @@ class Kijiji:
 		self.driver.goto(self.my_ads)  # (1)
 		try:
 			self._sort_my_ads() # (2)
-			self.driver.wait_for_element('//li[starts-with(@class,"item")]')
+			self.driver.wait_for_element(
+				'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]')
 		except Exception as e:
 			self.log.info('Unable to sort ads [no ads in My Ads]: ' + str(e).replace('\n', ''))
 			return False
-		ads = self.driver.find_elements('//li[starts-with(@class,"item")]')  # (3)
+		ads = self.driver.find_elements(
+			'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]')  # (3)
 		for ad in ads: # (4)
 			if str(ad_id) in ad.get_attribute('data-qa-id'):
 				self.driver.wait_for_element(
@@ -102,8 +104,10 @@ class Kijiji:
 			raise RuntimeError('Attempted to delete all ads, but the user is '
 			                   'not signed in.')
 		self.driver.goto(self.my_ads) #(1)
-		self.driver.wait_for_element('//li[starts-with(@class,"item")]')
-		ads = self.driver.find_elements('//li[starts-with(@class,"item")]') # (2)
+		self.driver.wait_for_element(
+			'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]')
+		ads = self.driver.find_elements(
+			'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]') # (2)
 		if ads == previous: # prevents infinite recursion
 			raise RuntimeError('Attempted to delete all ads, but recursion has '
 			                   'no effect on number of ads left. (infinite recursion)')
@@ -146,12 +150,14 @@ class Kijiji:
 		self.driver.goto(self.my_ads) #(1)
 		try:
 			self._sort_my_ads() #(2)
-			self.driver.wait_for_element('//li[starts-with(@class,"item")]')
+			self.driver.wait_for_element(
+				'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]')
 		except Exception as e:
 			self.log.info(
 				'Unable to sort ads [no ads in My Ads]: ' + str(e).replace('\n',''))
 			return False
-		ads = self.driver.find_elements('//li[starts-with(@class,"item")]') #(3)
+		ads = self.driver.find_elements(
+			'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]') #(3)
 		urls:List[Tuple] = [] #('href','adId')
 		for ad in ads: # (4)
 			href = self.driver.wait_for_element(
@@ -178,7 +184,8 @@ class Kijiji:
 			raise RuntimeError('Attempted to count active posts, but the user is '
 			                   'not signed in.')
 		self.driver.goto(self.my_ads)
-		ads = self.driver.find_elements('//li[starts-with(@class,"item")]')
+		ads = self.driver.find_elements(
+			'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]')
 		ids = []
 		for ad in ads:
 			raw_id = ad.get_attribute('data-qa-id')
@@ -318,7 +325,7 @@ class Kijiji:
 			sleep(9999)
 		else:
 			self._submit_post()
-		self._assert_post_sucess()
+		self._assert_post_success()
 		return self.driver.wait_for_element(
 			'//a[starts-with(@class,"adId-")]').text
 
@@ -375,6 +382,7 @@ class Kijiji:
 		if 'www.kijiji.ca' not in url:
 			self.driver.goto(self.my_settings)
 		if self.is_signed_in():
+			self._dismiss_modal() # dismiss the 'enable notifications?' modal if it pops up
 			dropdown = self.driver.wait_for_element("//button[contains(@class,'control')]")
 			dropdown.click()
 			logout = self.driver.wait_for_element("//button[contains(@class,'signOut')]")
@@ -392,6 +400,13 @@ class Kijiji:
 				                  'sign out. Site might have changed.')
 				raise RuntimeError('Failed assert that the user is either '
 				                   'signed in or signed out.')
+
+	def _dismiss_modal(self):
+		"""Close kijiji modals requesting to turn notifications on"""
+		modal = self.driver.find_element(
+					'//button[@data-qa-id="ModalCloseButton"]', required=False)
+		if modal is not None:
+			modal.click() # dismiss
 
 	def _dismiss_obstacles(self):
 		"""Dismiss 'plan selection' and 'policy acknowledgement' if present"""
@@ -418,16 +433,20 @@ class Kijiji:
 		self.driver.log.info('Switching to post page of category ID: "%s"' % category_id)
 		self.driver.goto(self.select_category.format(category_id))
 
-	def _assert_post_sucess(self)->NoReturn:
+	def _assert_post_success(self)->NoReturn:
 		#log URL to analyse behaviour for now, might change success criteria to
 		#be based on the URL if it is consistent.
-		self.driver.wait_for_page_to_contain(
-			'You have successfully posted your ad')
+		# self.driver.wait_for_page_to_contain('You have successfully posted your ad') # slow to respond
 		url = self.driver.get_url()
-		if 'posted=true' not in url and 'Activated=true' not in url:
-			self.log.critical("URL's GET variables 'posted' or 'activated' "
-			                  "where not set to TRUE by Kijiji.\nFull url: %s"
-			                  % url)
+		for e in range(6):
+			if 'posted=true' not in url or 'adActivated=true' not in url:
+				sleep(0.5)
+				url = self.driver.get_url()
+			else:
+				return
+		self.log.critical("URL's GET variables 'posted' or 'activated' "
+		                  "where not set to TRUE by Kijiji.\nFull url: %s"
+		                  % url)
 
 	def _preview_post(self, attempts:int=1)->NoReturn:
 		"""
@@ -484,9 +503,12 @@ class Kijiji:
 				change_loc.click()
 			self.driver.wait_for_element(
 				"//textarea[@id='location']").send_keys(detail['value'])
-			self.driver.wait_for_element(
-				"//div[starts-with(@class,'autocompleteSuggestions')]/div[starts-with(@id,'downshift')]"
-			).click()
+			try:
+				self.driver.wait_for_element(
+					"//div[starts-with(@class,'autocompleteSuggestions')]/div[starts-with(@id,'downshift')]"
+				).click()
+			except:
+				pass # do nothing if you can't change the optional address/postal code
 			return
 
 		element_type = self._set_detail_type(detail['name'])
