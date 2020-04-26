@@ -7,6 +7,7 @@ import re
 from .logger import Logger
 from .browser_support.alert import Alert
 from .browser_support.browsermanagement import BrowserManagement
+from .browser_support.cookies import Cookies
 from .browser_support.element import Element
 from .browser_support.frames import Frames
 from .browser_support.javascript import Javascript
@@ -123,9 +124,11 @@ class Browser:
 		self.speed = DEFAULT_SPEED # TODO add a session speed controller
 		self.timeout = DEFAULT_TIMEOUT
 		self.screenshot_directory = SCREENSHOT_ROOT_DIRECTORY
+		self.cookies_directory = COOKIES_ROOT_DIRECTORY
 		libraries = [
 			Alert(self),
 			BrowserManagement(self),
+			Cookies(self),
 			Element(self),
 			Frames(self),
 			Javascript(self),

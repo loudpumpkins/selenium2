@@ -51,7 +51,7 @@ class Screenshot(Base):
 
 		``filename`` argument specifies the name of the file to write the
 		screenshot into. The directory where screenshots are saved can be
-		set when `set_screenshot_directory`. Default path is in the config file.
+		set with `set_screenshot_directory`. Default path is in the config file.
 
 		``filename`` contains marker ``{index}``, it will be automatically
 		replaced with unique running index preventing files to be overwritten.
@@ -69,7 +69,7 @@ class Screenshot(Base):
 		self._create_directory(path)
 		if not self.driver.save_screenshot(path):
 			raise RuntimeError("Failed to save screenshot '{}'.".format(path))
-		self.log.info('Saving screenshot at {}'.format(path))
+		self.log.info('Saving screenshot to {}'.format(path))
 		return path
 
 	def set_screenshot_directory(self, path=None, append=True):

@@ -21,5 +21,20 @@ SCREENSHOT_ROOT_DIRECTORY = os.path.abspath(
 	)
 )
 
+# default location to store screenshots. Can be changed using set_cookies_directory(path)
+COOKIES_ROOT_DIRECTORY = os.path.abspath(
+	os.path.join(
+
+		# file directory (.../selenium2/config)
+		os.path.dirname(os.path.abspath(__file__)),
+
+		# parent node (.../selenium2)
+		os.pardir,
+
+		# sibling node (../selenium2/cookies)
+		'cookies'
+	)
+)
+
 # running speed of the script
 DEFAULT_SPEED = 0.0

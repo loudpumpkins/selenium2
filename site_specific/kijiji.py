@@ -345,27 +345,35 @@ class Kijiji:
 		:return: NoReturn
 		"""
 		self.driver.goto(self.sign_in_page)
-		if self.is_signed_out():
-			self.log.info("Signing in to kijiji.")
-			self.driver.send_keys('#LoginEmailOrNickname', username)
-			self.driver.send_keys('#login-password', password)
-			self.driver.click_button('#SignInButton')
-			if not self.is_signed_in(): #failed confirm sign in
-				self.log_alert_message()
-				raise RuntimeError('Failed to sign in using id: "%s", pw: "%s".'
-				                   % (username, password))
-		else: #failed to confirm user is signed out
-			if self.is_signed_in():
-				self.log.info("Attempted to sign in, but the user is already "
-				              "signed in.")
-			else: #failed to confirm user is also signed in
-				self.log.critical('Failed to assert that user is either '
-				                  'signed in or signed out while trying to '
-				                  'sign in. Site might have changed. User '
-				                  'used: %s, password: %s'
-				                  % (username, password))
-				raise RuntimeError('Failed assert that the user is either '
-				                   'signed in or signed out.')
+		self.log.info("Signing in to kijiji.")
+		value = input("Ready to input username. Press 'enter' when you are ready.")
+		self.driver.send_keys('#LoginEmailOrNickname', username)
+		value = input("Ready to input password. Press 'enter' when you are ready.")
+		self.driver.send_keys('#login-password', password)
+		value = input("Continue?")
+
+		# self.driver.goto(self.sign_in_page)
+		# if self.is_signed_out():
+		# 	self.log.info("Signing in to kijiji.")
+		# 	self.driver.send_keys('#LoginEmailOrNickname', username)
+		# 	self.driver.send_keys('#login-password', password)
+		# 	self.driver.click_button('#SignInButton')
+		# 	if not self.is_signed_in(): #failed confirm sign in
+		# 		self.log_alert_message()
+		# 		raise RuntimeError('Failed to sign in using id: "%s", pw: "%s".'
+		# 		                   % (username, password))
+		# else: #failed to confirm user is signed out
+		# 	if self.is_signed_in():
+		# 		self.log.info("Attempted to sign in, but the user is already "
+		# 		              "signed in.")
+		# 	else: #failed to confirm user is also signed in
+		# 		self.log.critical('Failed to assert that user is either '
+		# 		                  'signed in or signed out while trying to '
+		# 		                  'sign in. Site might have changed. User '
+		# 		                  'used: %s, password: %s'
+		# 		                  % (username, password))
+		# 		raise RuntimeError('Failed assert that the user is either '
+		# 		                   'signed in or signed out.')
 
 	def sign_out(self)->NoReturn:
 		"""

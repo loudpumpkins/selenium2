@@ -1,6 +1,15 @@
 config/config_production.py
-screenshots/
 .idea/
 __pycache__
 *.pyc
 *.log
+
+## ignore contents of folders - (1)
+screenshots/*
+cookies/*
+
+## (2) - but keep the folders themselves - but a file is needed to 
+## keep the folder, so keep empty file '.gitkeep'
+
+!screenshots/.gitkeep
+!cookies/.gitkeep
