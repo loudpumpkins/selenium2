@@ -138,7 +138,7 @@ class Cookies(Base):
 		:return: str - previous path
 		"""
 		if path is not None:
-			path = os.path.normpath(os.path.join(self._root.screenshot_directory, path))\
+			path = os.path.normpath(os.path.join(self._root.cookies_directory, path))\
 				if append else path
 			self._create_directory(path)
 		previous = self._root.cookies_directory

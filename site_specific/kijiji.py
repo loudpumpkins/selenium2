@@ -14,6 +14,7 @@ class Kijiji:
 	# good format to fetch all locations
 	locations_access = 'https://web.archive.org/web/20170914180512/https://www.kijiji.ca/'
 
+	homepage = 'https://www.kijiji.ca/'
 	category_page = 'https://www.kijiji.ca/p-post-ad.html?categoryId={}'
 	my_ads = 'https://www.kijiji.ca/m-my-ads/active/1'
 	my_favourites = 'https://www.kijiji.ca/m-watch-list.html'
@@ -332,7 +333,8 @@ class Kijiji:
 	def reply_to_new_messages(self)->NoReturn:
 		pass
 
-	def sign_in(self, username:str, password:str)->NoReturn:
+	def sign_in(self, username:str, password:str, cookies:str = None,
+	            load_cookies:bool = True)->NoReturn:
 		"""
 		Sign in to kijiji using the provided username and password.
 		If the user is already signed in and it can be confirmed, the process
@@ -344,36 +346,45 @@ class Kijiji:
 		:param password: str
 		:return: NoReturn
 		"""
-		self.driver.goto(self.sign_in_page)
-		self.log.info("Signing in to kijiji.")
-		value = input("Ready to input username. Press 'enter' when you are ready.")
-		self.driver.send_keys('#LoginEmailOrNickname', username)
-		value = input("Ready to input password. Press 'enter' when you are ready.")
-		self.driver.send_keys('#login-password', password)
-		value = input("Continue?")
-
-		# self.driver.goto(self.sign_in_page)
-		# if self.is_signed_out():
-		# 	self.log.info("Signing in to kijiji.")
-		# 	self.driver.send_keys('#LoginEmailOrNickname', username)
-		# 	self.driver.send_keys('#login-password', password)
-		# 	self.driver.click_button('#SignInButton')
-		# 	if not self.is_signed_in(): #failed confirm sign in
-		# 		self.log_alert_message()
-		# 		raise RuntimeError('Failed to sign in using id: "%s", pw: "%s".'
-		# 		                   % (username, password))
-		# else: #failed to confirm user is signed out
-		# 	if self.is_signed_in():
-		# 		self.log.info("Attempted to sign in, but the user is already "
-		# 		              "signed in.")
-		# 	else: #failed to confirm user is also signed in
-		# 		self.log.critical('Failed to assert that user is either '
-		# 		                  'signed in or signed out while trying to '
-		# 		                  'sign in. Site might have changed. User '
-		# 		                  'used: %s, password: %s'
-		# 		                  % (username, password))
-		# 		raise RuntimeError('Failed assert that the user is either '
-		# 		                   'signed in or signed out.')
+		if cookies is None or not load_cookies:
+			# no cookies filename provided or asked not to load cookie file
+			self.driver.goto(self.sign_in_page)
+			if self.is_signed_out():
+				self.log.info("Signing in to kijiji without loading cookies.")
+				self.driver.send_keys('#LoginEmailOrNickname', username)
+				self.driver.send_keys('#login-password', password)
+				self.driver.click_button('#SignInButton')
+				if not self.is_signed_in(): #failed confirm sign in
+					self.log_alert_message()
+					raise RuntimeError('Failed to sign in using id: "%s", pw: "%s".'
+					                   % (username, password))
+				else:
+					if cookies is not None: #cookie filename provided, save cookies.
+						self.driver.save_cookies(cookies)
+					return #successfully logged in
+			else: #failed to confirm user is signed out
+				if self.is_signed_in():
+					self.log.info("Attempted to sign in, but the user is already "
+					              "signed in.")
+				else: #failed to confirm user is also signed in
+					self.log.critical('Failed to assert that user is either '
+					                  'signed in or signed out while trying to '
+					                  'sign in. Site might have changed. User '
+					                  'used: %s, password: %s'
+					                  % (username, password))
+					raise RuntimeError('Failed assert that the user is either '
+					                   'signed in or signed out.')
+		else: # load cookies and assert user is now logged in
+			self.driver.goto(self.homepage)
+			self.log.info("Signing in to kijiji by loading cookies.")
+			self.driver.load_cookies(cookies)
+			self.driver.goto(self.homepage)
+			if self.is_signed_in():
+				self.log.info("Cookies loaded and user is now logged in.")
+				return
+			else:
+				self.log.info("Cookies loaded, but user is not logged in.")
+				self.sign_in(username, password, cookies=cookies, load_cookies=False)
 
 	def sign_out(self)->NoReturn:
 		"""
