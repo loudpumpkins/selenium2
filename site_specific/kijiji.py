@@ -354,6 +354,7 @@ class Kijiji:
 				self.driver.send_keys('#LoginEmailOrNickname', username)
 				self.driver.send_keys('#login-password', password)
 				self.driver.click_button('#SignInButton')
+				input("CAPTCHA completed? Press ENTER to continue.")
 				if not self.is_signed_in(): #failed confirm sign in
 					self.log_alert_message()
 					raise RuntimeError('Failed to sign in using id: "%s", pw: "%s".'
