@@ -333,20 +333,20 @@ class Kijiji:
 	def reply_to_new_messages(self)->NoReturn:
 		pass
 
-	def sign_in(self, username:str, password:str, cookies:str = None,
-	            load_cookies:bool = True)->NoReturn:
+	def sign_in(self, username:str, password:str, cookies:str = None)->NoReturn:
 		"""
-		Sign in to kijiji using the provided username and password.
-		If the user is already signed in and it can be confirmed, the process
-		will not be halted, however, in the event that a sign in cannot be
-		confirmed, the process will be halted and will throw a RuntimeError
-		exception.
+		Sign in to Kijiji using the provided `username` and `password`.
+		If a `cookies` filename is provided, it will try to load it and see if
+		the user is now logged int.
+		If the `cookies` filename is not found, it will try to sign in normally
+		and save the `cookies` file after signing in.
 
 		:param username: str
 		:param password: str
+		:param cookies: str
 		:return: NoReturn
 		"""
-		if cookies is None or not load_cookies:
+		if cookies is None:
 			# no cookies filename provided or asked not to load cookie file
 			self.driver.goto(self.sign_in_page)
 			if self.is_signed_out():
@@ -354,19 +354,18 @@ class Kijiji:
 				self.driver.send_keys('#LoginEmailOrNickname', username)
 				self.driver.send_keys('#login-password', password)
 				self.driver.click_button('#SignInButton')
-				input("CAPTCHA completed? Press ENTER to continue.")
+				# input("CAPTCHA completed? Press ENTER to continue.")
 				if not self.is_signed_in(): #failed confirm sign in
 					self.log_alert_message()
 					raise RuntimeError('Failed to sign in using id: "%s", pw: "%s".'
 					                   % (username, password))
 				else:
-					if cookies is not None: #cookie filename provided, save cookies.
-						self.driver.save_cookies(cookies)
 					return #successfully logged in
 			else: #failed to confirm user is signed out
 				if self.is_signed_in():
 					self.log.info("Attempted to sign in, but the user is already "
 					              "signed in.")
+					return  # successfully logged in
 				else: #failed to confirm user is also signed in
 					self.log.critical('Failed to assert that user is either '
 					                  'signed in or signed out while trying to '
@@ -375,17 +374,27 @@ class Kijiji:
 					                  % (username, password))
 					raise RuntimeError('Failed assert that the user is either '
 					                   'signed in or signed out.')
-		else: # load cookies and assert user is now logged in
+		else:
+			# try to load cookies and see if user is now logged in, or make cookies
+			# if cookies file not found.
 			self.driver.goto(self.homepage)
 			self.log.info("Signing in to kijiji by loading cookies.")
-			self.driver.load_cookies(cookies)
+			try:
+				self.driver.load_cookies(cookies)
+			except RuntimeError as e:
+				self.log.info(e)
+				self.sign_in(username, password)
+				self.driver.save_cookies(cookies)
+				return
 			self.driver.goto(self.homepage)
 			if self.is_signed_in():
 				self.log.info("Cookies loaded and user is now logged in.")
 				return
 			else:
 				self.log.info("Cookies loaded, but user is not logged in.")
-				self.sign_in(username, password, cookies=cookies, load_cookies=False)
+				self.sign_in(username, password)
+				self.driver.save_cookies(cookies)
+				return
 
 	def sign_out(self)->NoReturn:
 		"""
