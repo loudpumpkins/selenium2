@@ -18,14 +18,25 @@ class WebDriverCreator:
 	"""
 
 	browser_names = {
-		'googlechrome' : 'chrome', 'gc' : 'chrome', 'chrome' : 'chrome', 'google' : 'chrome',   # chrome
-		'headlesschrome' : 'headless_chrome', 'chromeheadless' : 'headless_chrome',             # headless chrome
+		# chrome
+		'googlechrome':'chrome', 'gc':'chrome', 'chrome':'chrome', 'google':'chrome',
+		# ninja chrome - anti robot detection browser in chrome
+		'ninja':'ninja_chrome', 'hidden':'ninja_chrome', 'secret':'ninja_chrome',
+		'ninja chrome':'ninja', 'hidden chrome':'ninja', 'secret chrome':'ninja',
+		'ninja-chrome':'ninja', 'hidden-chrome':'ninja', 'secret-chrome':'ninja',
+		'ninja_chrome':'ninja', 'hidden_chrome':'ninja', 'secret_chrome':'ninja',
+		# headless chrome
+		'headlesschrome':'headless_chrome', 'chromeheadless':'headless_chrome',
 		'headless_chrome':'headless_chrome', 'headless chrome':'headless_chrome',
-		'ff' : 'firefox', 'firefox' : 'firefox',                                                # firefox
-		'headlessfirefox' : 'headless_firefox', 'firefoxheadless' : 'headless_firefox',         # headless firefox
-		'headless firefox':'headless_firefox', 'headless_firefox': 'headless_firefox',
-		'ie' : 'ie', 'internetexplorer' : 'ie', 'explorer': 'ie',                               # internet explorer
-		'edge' : 'edge',                                                                        # edge
+		# firefox
+		'ff':'firefox', 'firefox':'firefox',
+		# headless firefox
+		'headlessfirefox':'headless_firefox', 'firefoxheadless':'headless_firefox',
+		'headless firefox':'headless_firefox', 'headless_firefox':'headless_firefox',
+		# internet explorer
+		'ie':'ie', 'internetexplorer':'ie', 'explorer':'ie',
+		# edge
+		'edge':'edge',
 
 		# TODO: add other browsers
 		# 'opera' : 'opera',
@@ -77,7 +88,8 @@ class WebDriverCreator:
 
 	def create_chrome(self, desired_capabilities, profile, options):
 		if profile is not None:
-			self.log.warning('Chrome was instantiated with a profile which is a firefox exclusive parameter.')
+			self.log.warning('Chrome was instantiated with a profile which is a '
+			                 'firefox exclusive parameter.')
 		if desired_capabilities is not None:
 			default_desired_capabilities = webdriver.DesiredCapabilities.CHROME.copy()
 			default_desired_capabilities.update(desired_capabilities)
@@ -85,6 +97,41 @@ class WebDriverCreator:
 		else:
 			desired_capabilities = {}
 		return webdriver.Chrome(desired_capabilities=desired_capabilities, options=options)
+
+	def create_ninja(self, desired_capabilities, profile, options):
+		"""
+		Recommended to edit chromedriver.exe by replacing all 'cdc_' text to
+		'dog_' or anything else. Also, `Options` argument is ignored.
+		"""
+		if profile is not None:
+			self.log.warning('Chrome was instantiated with a profile which is a '
+			                 'firefox exclusive parameter.')
+		if options is not None:
+			self.log.warning('Chrome ninja comes with preset options, but additional '
+			                 'options were provided.')
+		options = webdriver.ChromeOptions()
+		options.add_experimental_option("excludeSwitches",
+		                                ["enable-automation"])
+		options.add_experimental_option('useAutomationExtension', False)
+		if desired_capabilities is not None:
+			default_desired_capabilities = webdriver.DesiredCapabilities.CHROME.copy()
+			default_desired_capabilities.update(desired_capabilities)
+			desired_capabilities = default_desired_capabilities
+		else:
+			desired_capabilities = {}
+
+		driver = webdriver.Chrome(desired_capabilities=desired_capabilities, options=options)
+		driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+			"source": """
+		    Object.defineProperty(navigator, 'webdriver', {
+		      get: () => undefined
+		    })
+		  """
+		})
+		driver.execute_cdp_cmd("Network.enable", {})
+		driver.execute_cdp_cmd("Network.setExtraHTTPHeaders",
+		                       {"headers": {"User-Agent": "browser1"}})
+		return driver
 
 	def create_headless_chrome(self, desired_capabilities, profile, options):
 		if profile is not None:

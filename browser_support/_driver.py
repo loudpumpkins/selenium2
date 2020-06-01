@@ -8,6 +8,10 @@ from ..logger import Logger
 
 
 class Driver:
+	"""
+	self._root is basically the 'Browser' class and self.driver refers to
+	self._root.driver which is Browser.driver.
+	"""
 
 	def __init__(self, root):
 		"""

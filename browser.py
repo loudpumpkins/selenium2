@@ -78,19 +78,20 @@ class Browser:
 	A browser instance will have all the methods not pre-fixed with an
 	underscore (_) defined in the following classes/files:
 
-		_____CLASS_NAME_________|____FILE_NAME____________
-			Driver              |   _driver.py              (PARENT)
-			Base                |   _base.py                (SUB_PARENT)
-			Alert               |   alert.py
-			BrowserManagement   |   browsermanagement.py
-			Element             |   element.py
-			Frames              |   frames.py
-			Javascript          |   javascript.py
-			Screenshot          |   screenshot.py
-			Selects             |   selects.py
-			Tables              |   tables.py
-			Waiting             |   waiting.py
-			WindowManager       |   windowmanager.py
+		_____CLASS_NAME_________|____FILE_NAME______________|___HIERARCHY_____
+			Driver              |   _driver.py              |   PARENT
+			Base                |   _base.py                |   SUB_PARENT
+			Alert               |   alert.py                |   leaf
+			BrowserManagement   |   browsermanagement.py    |   leaf
+			Cookies             |   cookies.py              |   leaf
+			Element             |   element.py              |   leaf
+			Frames              |   frames.py               |   leaf
+			Javascript          |   javascript.py           |   leaf
+			Screenshot          |   screenshot.py           |   leaf
+			Selects             |   selects.py              |   leaf
+			Tables              |   tables.py               |   leaf
+			Waiting             |   waiting.py              |   leaf
+			WindowManager       |   windowmanager.py        |   leaf
 
 	=== Additional functionality ===
 
@@ -99,7 +100,7 @@ class Browser:
 
 	They can be instantiated directly:
 	  kijiji = Kijiji('chrome', desired_capabilities=dc)
-	  kijiji.sign_in('username', 'password')
+	  kijiji.sign_in('username', 'password', 'cookie')
 
 	But if functionality is required for multiple sites in a single session,
 	create a Browser instance and pass it to the classes as a function argument.

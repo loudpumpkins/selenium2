@@ -101,7 +101,7 @@ class Cookies(Base):
 
 		``filename`` argument specifies the name of the file to write the
 		cookies into. The directory where cookies are saved can be set with
-		`set_screenshot_directory`. Default path is in the config file.
+		`set_cookies_directory`. Default path is in the config file.
 
 		An absolute path to the created cookies file is returned.
 

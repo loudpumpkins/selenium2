@@ -337,7 +337,7 @@ class Kijiji:
 		"""
 		Sign in to Kijiji using the provided `username` and `password`.
 		If a `cookies` filename is provided, it will try to load it and see if
-		the user is now logged int.
+		the user is now logged in.
 		If the `cookies` filename is not found, it will try to sign in normally
 		and save the `cookies` file after signing in.
 
@@ -351,10 +351,11 @@ class Kijiji:
 			self.driver.goto(self.sign_in_page)
 			if self.is_signed_out():
 				self.log.info("Signing in to kijiji without loading cookies.")
-				self.driver.send_keys('#LoginEmailOrNickname', username)
-				self.driver.send_keys('#login-password', password)
-				self.driver.click_button('#SignInButton')
-				# input("CAPTCHA completed? Press ENTER to continue.")
+				self.driver.send_keys('#emailOrNickname', username)
+				self.driver.send_keys('#password', password)
+				self.driver.find_element("//label[@for='rememberMe']").click()
+				self.driver.find_element("//button[starts-with(@class, 'signInButton')]").click()
+				input("CAPTCHA completed? Press ENTER to continue.")
 				if not self.is_signed_in(): #failed confirm sign in
 					self.log_alert_message()
 					raise RuntimeError('Failed to sign in using id: "%s", pw: "%s".'
@@ -552,7 +553,7 @@ class Kijiji:
 				"//select[@name='%s']" % detail['name'],
 				detail['value']
 			)
-		elif element_type <= 5: # (3) RADIO and (4) CHECKBOX
+		elif element_type <= 5: # (4) RADIO and (5) CHECKBOX
 			label = self.driver.find_element(
 				"//label[@for='%s']" % detail['value'])
 			if self.driver.is_visible(label):
