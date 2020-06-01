@@ -21,7 +21,7 @@ class WebDriverCreator:
 		# chrome
 		'googlechrome':'chrome', 'gc':'chrome', 'chrome':'chrome', 'google':'chrome',
 		# ninja chrome - anti robot detection browser in chrome
-		'ninja':'ninja_chrome', 'hidden':'ninja_chrome', 'secret':'ninja_chrome',
+		'ninja':'ninja', 'hidden':'ninja', 'secret':'ninja',
 		'ninja chrome':'ninja', 'hidden chrome':'ninja', 'secret chrome':'ninja',
 		'ninja-chrome':'ninja', 'hidden-chrome':'ninja', 'secret-chrome':'ninja',
 		'ninja_chrome':'ninja', 'hidden_chrome':'ninja', 'secret_chrome':'ninja',
