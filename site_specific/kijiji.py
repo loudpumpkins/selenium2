@@ -8,9 +8,10 @@ from time import sleep
 # internal
 from ..browser import Browser
 from ..logger import Logger
+from ..site_specific import DefaultBehaviour
 
-class Kijiji:
 
+class Kijiji(DefaultBehaviour):
 	# good format to fetch all locations
 	locations_access = 'https://web.archive.org/web/20170914180512/https://www.kijiji.ca/'
 
