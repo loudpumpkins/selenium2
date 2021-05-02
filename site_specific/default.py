@@ -2,7 +2,6 @@
 from typing import NoReturn
 
 # internal
-from ..browser import Browser
 from ..logger import Logger
 
 
@@ -12,7 +11,7 @@ class DefaultBehaviour:
 	site-specific classes.
 	"""
 
-	def __init__(self, driver: Browser):
+	def __init__(self, driver):
 		self.driver = driver
 		self.log = Logger().log
 
@@ -25,6 +24,33 @@ class DefaultBehaviour:
 		:return: bool - True for success
 		"""
 		self._not_implementated('create_account')
+
+	def create_content(self, details: dict) -> str:
+		"""
+		Post an ad, a tweet, a post, an image, etc. The main purpose of the
+		site that we are building behaviour for.
+
+		:return: str - returns an identifier to the new content (url, ID, ...)
+		"""
+		self._not_implementated('create_content')
+
+	def delete_content(self, details: dict) -> bool:
+		"""
+		Delete an ad, a tweet, a post, an image, etc. The main purpose of the
+		site that we are building behaviour for.
+
+		:return: bool - returns True if content found and delete. False otherwise.
+		"""
+		self._not_implementated('delete_content')
+
+	def edit_content(self, details: dict) -> bool:
+		"""
+		Edit an ad, a tweet, a post, an image, etc. The main purpose of the
+		site that we are building behaviour for.
+
+		:return: bool - returns True of content found and edited. False otherwise.
+		"""
+		self._not_implementated('edit_content')
 
 	def is_signed_in(self) -> bool:
 		"""
@@ -42,15 +68,6 @@ class DefaultBehaviour:
 		"""
 		self._not_implementated('is_signed_out')
 
-	def post(self, details: dict) -> str:
-		"""
-		Post an ad, a tweet, a post, an image, etc. The main purpose of the
-		site that we are building behaviour for.
-
-		:return: str - returns an identifier to the new content (url, ID, ...)
-		"""
-		self._not_implementated('post')
-
 	def sign_in(self, details: dict, cookies: str = None) -> NoReturn:
 		"""
 		Sign in to the site using the credentials found in `details`.
@@ -64,7 +81,6 @@ class DefaultBehaviour:
 	def sign_out(self) -> NoReturn:
 		"""
 		Sign out from the site. Will try assert that sign_out() was successful.
-		Call 'is_signed_out' if confirmation is needed.
 		"""
 		self._not_implementated('sign_out')
 

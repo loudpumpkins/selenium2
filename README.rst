@@ -35,7 +35,7 @@ appended in the system's PATH variable.`
 DOWNLOAD LINK: https://www.seleniumhq.org/download/
 
 Available Methods
-_________________
+-----------------
 
 A base instance of ``Browser`` will have all the following methods. Note that you
 can still access the underlying selenium driver for more fine grained control
@@ -214,10 +214,10 @@ through ``Browser.driver``.
 
 
 Site-specific methods
-_____________________
+---------------------
 
-Additional site-specific methods are available once set.
-Set site-specific behaviour to the given site using `Browser.set_site_behaviour(sitename)`
+Additional site-specific methods are available, but a site must be set first.
+This ca be done using ``Browser.set_site_behaviour(sitename)``
 
 For instance, before you can use 'sign_in' or 'create_account', you must indicate
 for which site you would like this behaviour to occur.
@@ -225,17 +225,27 @@ for which site you would like this behaviour to occur.
 .. code-block:: python
 
 	chrome = Browser('chrome')
+
 	chrome.set_site_behaviour('facebook')
-	chrome.sign_in(details)
+	chrome.sign_in(credentials)
+	chrome.post_content(details)
+	chrome.sign_out()
+
+	chrome.set_site_behaviour('kijiji')
+	chrome.sign_in(credentials)
+	chrome.post_content(ad)
+	chrome.sign_out()
 
 The following are site-specific methods which require a site to be set first.
 
 .. code-block:: python
 
 	def create_account(self, details: dict, cookies: str = None): ...
+	def create_content(self, details: dict) -> str: ...
+	def delete_content(self, details: dict) -> bool: ...
+	def edit_content(self, details: dict) -> bool: ...
 	def is_signed_in(self) -> bool: ...
 	def is_signed_out(self) -> bool: ...
-	def post(self, details: dict) -> str: ...
 	def sign_in(self, details: dict, cookies: str = None) -> NoReturn: ...
 	def sign_out(self) -> NoReturn: ...
 

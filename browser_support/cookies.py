@@ -1,7 +1,8 @@
 from ..config import *
 
 # external
-import os, pickle
+import os
+import json
 
 # internal
 from ..logger import Logger
@@ -33,7 +34,7 @@ class Cookies(Base):
 
 	def delete_all_cookies(self):
 		"""
-        Delete all cookies in the scope of the session.
+		Delete all cookies in the scope of the session.
 
 		:return: NoReturn
 		"""
@@ -48,7 +49,7 @@ class Cookies(Base):
 		"""
 		self.driver.delete_cookie(name)
 
-	def get_cookie(self, name:str):
+	def get_cookie(self, name: str):
 		"""
 		Get a single cookie by name. Returns the cookie if found, None if not.
 
@@ -66,7 +67,7 @@ class Cookies(Base):
 		"""
 		return self.driver.get_cookies()
 
-	def load_cookies(self, filename: str, path: str='default'):
+	def load_cookies(self, filename: str, path: str = 'default'):
 		"""
 		Load all cookies stored in `filename` into the current browser session.
 		Will look for the file in the DEFAULT_COOKIE_DIRECTY if the `path` is
@@ -83,9 +84,9 @@ class Cookies(Base):
 		else:
 			path = os.path.join(path, filename)
 		try:
-			with open(path, 'rb') as filehandle:
+			with open(path, 'r') as filehandle:
 				# load binary data steam of a list of cookies
-				cookies = pickle.load(filehandle)
+				cookies = json.load(filehandle)
 		except FileNotFoundError:
 			raise RuntimeError("Failed to load file '%s'. File not found. "
 			                   "Full path used: %s" % (filename, path) )
@@ -114,9 +115,9 @@ class Cookies(Base):
 		path = self._get_cookies_path(filename)
 		self._create_directory(path)
 		cookies = self.driver.get_cookies()
-		with open(path, 'wb') as filehandle:
+		with open(path, 'w') as filehandle:
 			# store the cookies as binary data stream
-			pickle.dump(cookies, filehandle)
+			json.dump(cookies, filehandle, indent=2, default=str)
 		self.log.info('Saving cookies to {}'.format(path))
 		return path
 

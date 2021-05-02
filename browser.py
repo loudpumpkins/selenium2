@@ -19,6 +19,7 @@ from .browser_support.windowmanager import WindowManager
 from .browser_support._webdrivercreator import WebDriverCreator
 from .site_specific import DefaultBehaviour, Kijiji
 
+
 class Browser:
 	"""
 	Selenium Webdriver Controller
@@ -46,21 +47,23 @@ class Browser:
 			aliases are available such as "ff" for "firefox". See
 			_webdrivercreator.py -> "browser_names" for all aliases.
 		:param desired_capabilities: Dictionary object with non-browser specific
-            capabilities only, such as "proxy" or "loggingPref".
-            list: https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities
+			capabilities only, such as "proxy" or "loggingPref".
+			list: https://github.com/SeleniumHQ/selenium/wiki/DesiredCapabilities
 		:param profile: Instance of ``FirefoxProfile`` object or a string.
 			If undefined, a fresh profile will be created in a temporary
 			location on the system. (Firefox exclusive argument)
 		:param options: this takes an instance of browser specific options class
 			such as webdriver.FirefoxOptions()
 
-	Example:
+	Examples:
+
 	-   basic browser:
 			chrome = Browser('chrome')
-	-   with desired capabilities:
+
+	-   with proxy:
 			proxy = {
 				'proxyType': 'MANUAL',
-			    'sslProxy': '192.0.0.1:80',
+				'sslProxy': '192.0.0.1:80',
 				'httpProxy': '192.0.0.1:80',
 				'ftpProxy': '192.0.0.1:80',
 			}
@@ -68,6 +71,14 @@ class Browser:
 				'proxy': proxy,
 			}
 			firefox = Browser('firefox', desired_capabilities=dc)
+
+	-   with anonymity:
+			profile = FirefoxProfile()
+			profile.set_preference("dom.webdriver.enabled", False)
+			profile.set_preference('useAutomationExtension', False)
+			profile.update_preferences()
+
+			firefox = Browser('firefox', profile=profile)
 
 	NOTE: browser specific drivers need to be present and their path
 	needs to be appended in the system's PATH variable.
@@ -79,8 +90,8 @@ class Browser:
 	underscore (_) defined in the following classes/files:
 
 		_____CLASS_NAME_________|____FILE_NAME______________|___HIERARCHY_____
-			Driver              |   _driver.py              |   PARENT
-			Base                |   _base.py                |   SUB_PARENT
+			Driver              |   _driver.py              |   parent
+			Base                |   _base.py                |   child
 			Alert               |   alert.py                |   leaf
 			BrowserManagement   |   browsermanagement.py    |   leaf
 			Cookies             |   cookies.py              |   leaf
@@ -95,23 +106,25 @@ class Browser:
 
 	=== Additional functionality ===
 
-	Additional site-specific methods can be imported from the ./site_specific
-	folder.
+	Additional site-specific methods are available, but a site must be set first.
+	This ca be done using ``Browser.set_site_behaviour(sitename)``
 
-	They can be instantiated directly:
-	  kijiji = Kijiji('chrome', desired_capabilities=dc)
-	  kijiji.sign_in('username', 'password', 'cookie')
+	For instance, before you can use 'sign_in' or 'create_account', you must indicate
+	for which site you would like this behaviour to occur.
 
-	But if functionality is required for multiple sites in a single session,
-	create a Browser instance and pass it to the classes as a function argument.
-	  browser = Browser('chrome')               (1)
-	  kijiji = Kijiji(browser)                  (2)
-	  kijiji.sign_in('username', 'password')
-	  kijiji = None                             #garbage collection
-	  facebook = Facebook(browser)              (3)
-	  facebook.sign_in('username', 'password')
-	  facebook = None                           #garbage collection
-	  browser.quit()                            (4)
+	Example:
+
+		chrome = Browser('chrome')
+
+		chrome.set_site_behaviour('facebook')
+		chrome.sign_in(credentials)
+		chrome.post_content(details)
+		chrome.sign_out()
+
+		chrome.set_site_behaviour('kijiji')
+		chrome.sign_in(credentials)
+		chrome.post_content(ad)
+		chrome.sign_out()
 
 	"""
 
@@ -193,6 +206,33 @@ class Browser:
 		"""
 		return self.site_specific_behaviour.create_account(details, cookies)
 
+	def create_content(self, details: dict) -> str:
+		"""
+		Post an ad, a tweet, a post, an image, etc. The main purpose of the
+		site that we are building behaviour for.
+
+		:return: str - returns an identifier to the new content (url, ID, ...)
+		"""
+		return self.site_specific_behaviour.create_content(details)
+
+	def delete_content(self, details: dict) -> bool:
+		"""
+		Delete an ad, a tweet, a post, an image, etc. The main purpose of the
+		site that we are building behaviour for.
+
+		:return: bool - returns True if content found and delete. False otherwise.
+		"""
+		return self.site_specific_behaviour.delete_content(details)
+
+	def edit_content(self, details: dict) -> bool:
+		"""
+		Edit an ad, a tweet, a post, an image, etc. The main purpose of the
+		site that we are building behaviour for.
+
+		:return: bool - returns True of content found and edited. False otherwise.
+		"""
+		return self.site_specific_behaviour.edit_content(details)
+
 	def is_signed_in(self):
 		"""
 		Explicitly assert that user is logged in. Does not rely on 'is_signed_out'.
@@ -209,15 +249,6 @@ class Browser:
 		"""
 		return self.site_specific_behaviour.is_signed_out()
 
-	def post(self, details: dict):
-		"""
-		Post an ad, a tweet, a post, an image, etc. The main purpose of the
-		site that we are building behaviour for.
-
-		:return: str - returns an identifier to the new content (url, ID, ...)
-		"""
-		return self.site_specific_behaviour.post(details)
-
 	def sign_in(self, details, cookies=None):
 		"""
 		Sign in to the site using the credentials found in `details`.
@@ -231,7 +262,6 @@ class Browser:
 	def sign_out(self):
 		"""
 		Sign out from the site. Will try assert that sign_out() was successful.
-		Call 'is_signed_out' if confirmation is needed.
 		"""
 		self.site_specific_behaviour.sign_out()
 
