@@ -10,6 +10,7 @@ class DefaultBehaviour:
 	Default SITE behaviour such as login, logout, etc. to be implemented by all
 	site-specific classes.
 	"""
+	name = 'default'
 
 	def __init__(self, driver):
 		self.driver = driver

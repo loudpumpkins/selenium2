@@ -265,6 +265,25 @@ class Browser:
 		"""
 		self.site_specific_behaviour.sign_out()
 
+	def site_custom(self, method_name, *args):
+		"""
+		Once a site_specific_behaviour is set, you may call a custom method
+		available only to the specific site.
+
+		:param method_name: name of the method to call
+		:param args: arguments to pass to the method
+		"""
+		if hasattr(self.site_specific_behaviour, method_name):
+			method = getattr(self.site_specific_behaviour, method_name)
+			if callable(method):
+				return method(*args)
+			else:
+				raise RuntimeError("Attribute `%s` of site `%s` is not callable."
+							% (method_name, self.site_specific_behaviour.name))
+		else:
+			raise RuntimeError("Site `%s` does not have an attribute named `%s`."
+							% (self.site_specific_behaviour.name, method_name))
+
 	def get_attributes(self, libraries):
 		"""
 		Will parse every method in ``libraries`` and append those that

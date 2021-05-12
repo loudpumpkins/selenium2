@@ -14,6 +14,7 @@ from ..site_specific import DefaultBehaviour
 
 class Kijiji(DefaultBehaviour):
 	# good format to fetch all locations
+	name = 'kijiji'
 	locations_access = 'https://web.archive.org/web/20170914180512/https://www.kijiji.ca/'
 
 	homepage = 'https://www.kijiji.ca/'
@@ -148,6 +149,52 @@ class Kijiji(DefaultBehaviour):
 		"""
 		self._not_implementated('edit_content')
 
+	def is_signed_in(self) -> bool:
+		"""
+		Explicitly assert that user is logged in. Does not rely on 'is_signed_out'.
+
+		:return: bool - True for logged in
+		"""
+		"""
+		Will look for menu icon (profile avatar) which is available only if
+		the user is logged in
+		To assert that user is signed out, use "is_signed_out()" method as it
+		is faster.
+
+		:return: bool - True for logged in
+		"""
+		try:
+			self.driver.wait_for_element(
+				"//button[starts-with(@class,'control-')]",
+				timeout=40)
+			self.log.info('Asserted user is logged in.')
+			return True
+		except TimeoutException:
+			self.log.info('Failed to assert that the user is logged in.')
+			return False
+
+	def is_signed_out(self) -> bool:
+		"""
+		Explicitly assert that user is logged out. Does not rely on 'is_signed_in'.
+
+		:return: bool - True for logged out
+		"""
+		"""
+		Will look for 'Sign in' link in the nav bar which is available only if
+		the user is logged out
+		To assert that user is signed in, use "is_signed_in()" method as it
+		is faster.
+
+		:return: bool - True for logged out
+		"""
+		try:
+			self.driver.wait_for_element("@Sign In", timeout=40)
+			self.log.info('Asserted user is logged out.')
+			return True
+		except:
+			self.log.info('Failed to assert that the user is logged out.')
+			return False
+
 	def sign_in(self, details: dict, cookies: str = None) -> NoReturn:
 		"""
 		Sign in to kijiji using the credentials found in `details`.
@@ -169,7 +216,7 @@ class Kijiji(DefaultBehaviour):
 				self.driver.find_element("//label[starts-with(@class,'checkboxLabel')]").click()
 				self.driver.find_element(
 					"//button[starts-with(@class, 'signInButton')]").click()
-				input("CAPTCHA completed? Press ENTER to continue.")
+				# input("CAPTCHA completed? Press ENTER to continue.")
 				if not self.is_signed_in():  # failed confirm sign in
 					self.log_alert_message()
 					raise RuntimeError(
@@ -246,52 +293,6 @@ class Kijiji(DefaultBehaviour):
 				                  'sign out. Site might have changed.')
 				raise RuntimeError('Failed assert that the user is either '
 				                   'signed in or signed out.')
-
-	def is_signed_in(self) -> bool:
-		"""
-		Explicitly assert that user is logged in. Does not rely on 'is_signed_out'.
-
-		:return: bool - True for logged in
-		"""
-		"""
-		Will look for menu icon (profile avatar) which is available only if
-		the user is logged in
-		To assert that user is signed out, use "is_signed_out()" method as it
-		is faster.
-
-		:return: bool - True for logged in
-		"""
-		try:
-			self.driver.wait_for_element(
-				"//button[starts-with(@class,'control-')]",
-				timeout=40)
-			self.log.info('Asserted user is logged in.')
-			return True
-		except TimeoutException:
-			self.log.info('Failed to assert that the user is logged in.')
-			return False
-
-	def is_signed_out(self) -> bool:
-		"""
-		Explicitly assert that user is logged out. Does not rely on 'is_signed_in'.
-
-		:return: bool - True for logged out
-		"""
-		"""
-		Will look for 'Sign in' link in the nav bar which is available only if
-		the user is logged out
-		To assert that user is signed in, use "is_signed_in()" method as it
-		is faster.
-
-		:return: bool - True for logged out
-		"""
-		try:
-			self.driver.wait_for_element("@Sign In", timeout=40)
-			self.log.info('Asserted user is logged out.')
-			return True
-		except:
-			self.log.info('Failed to assert that the user is logged out.')
-			return False
 
 	def active_posts(self) -> int:
 		"""
