@@ -14,42 +14,49 @@ class Selects(Base):
 		super().__init__(root)
 		self.log = Logger().log
 
-	def get_select_items(self, locator, values=False):
+	def get_select_items(self, locator, attribute=''):
 		"""
-		Returns all labels or values of a <select> Tag identified by ``locator``.
+		Returns all labels, values or both for a <select> Tag identified by
+		``locator``.
 
-		Will return labels by default, but can return values if ``values`` is
-		set to true.
+		Will return both by default, but can return just the values or texts if
+		``attribute`` is set to 'value' or 'text' respectively.
 
 		Example:
 		<select id="myId">
-            <option value="books">Books</option>
-            <option value="html">HTML</option>
-            <option value="css">CSS</option>
-            <option value="php">PHP</option>
-            <option value="js">JavaScript</option>
-        </select>
+			<option value="books">Books</option>
+			<option value="html">HTML</option>
+			<option value="css">CSS</option>
+			<option value="php">PHP</option>
+			<option value="js">JavaScript</option>
+		</select>
 
-        get_select_items('#myId', values=False)
-            returns: ['Books', 'HTML', 'CSS', 'PHP', 'JavaScript']
+		get_select_items('#myId')
+			returns: [('books', 'Books'), ('html', 'HTML'), ('css', 'CSS'), ...]
 
-        get_select_items('#myId', values=True)
-            returns: ['books', 'html', 'css', 'php', 'js']
+		get_select_items('#myId', attribute='value')
+			returns: ['Books', 'HTML', 'CSS', 'PHP', 'JavaScript']
 
-        See `find_element` method in `_base.py` for ``locator`` usage/syntax
+		get_select_items('#myId', attribute='text')
+			returns: ['books', 'html', 'css', 'php', 'js']
+
+
+		See `find_element` method in `_base.py` for ``locator`` usage/syntax
 
 		:param locator: WebElement or str
-		:param values: bool - True returns values / False returns labels
+		:param attribute: bool - True returns values / False returns labels
 		:return: List[str]
 		"""
 		options = self._get_options(locator)
-		self.log.info('Getting a list of all {} in {} <select> tag.'.format(
-			'VALUES' if values else 'LABELS', locator
-		))
-		if values:
+		self.log.info('Getting a list of all options in {} <select> tag.'.format(
+			locator))
+
+		if attribute.lower() == 'value':
 			return self._get_values(options)
-		else:
+		elif attribute.lower() == 'text':
 			return self._get_labels(options)
+		else:
+			return self._get_values_and_labels(options)
 
 	def get_selected_item(self, locator, values=False):
 		"""
@@ -248,14 +255,17 @@ class Selects(Base):
 		for label in labels:
 			select.deselect_by_visible_text(label)
 
-	def _get_labels(self, options):
-		return [opt.text for opt in options]
-
 	def _get_options(self, locator):
 		return self._get_select_list(locator).options
 
+	def _get_labels(self, options):
+		return [opt.text for opt in options]
+
 	def _get_values(self, options):
 		return [opt.get_attribute('value') for opt in options]
+
+	def _get_values_and_labels(self, options):
+		return [(opt.get_attribute('value'), opt.text) for opt in options]
 
 	def _get_selected_options(self, locator):
 		return self._get_select_list(locator).all_selected_options

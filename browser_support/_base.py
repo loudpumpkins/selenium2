@@ -183,21 +183,23 @@ class Base(Driver):
 		locator = "xpath://*[contains(., %s)]" % self._escape_xpath_value(text)
 		return self.find_element(locator, required=False) is not None
 
-	def is_element_enabled(self, locator, tag=None):
+	def is_enabled(self, locator, tag=None):
 		"""
 		See if an element located by ``locator`` is enabled.
 
 		See `find_element()` for ``locator`` syntax.
 
-		:param locator:
-		:param tag:
+		:param locator: str or WebElement
+		:param tag: str
 		:return:
 		"""
-		element = self.find_element(locator, tag)
+		element = self.find_element(locator, tag, required=False)
+		if element is None:
+			return None
 		return (element.is_enabled() and
 		        element.get_attribute('readonly') is None)
 
-	def is_visible(self, locator):
+	def is_visible(self, locator, tag=None):
 		"""
 		See if an element located by ``locator`` is visible.
 		Visibility is determined by selenium and looks for attributes /
@@ -210,9 +212,10 @@ class Base(Driver):
 		See `find_element()` for ``locator`` syntax.
 
 		:param locator: str or WebElement
+		:param tag: str
 		:return:
 		"""
-		element = self.find_element(locator, required=False)
+		element = self.find_element(locator, tag, required=False)
 		return element.is_displayed() if element else None
 
 	def _filter(self, elements, tag, constraints):
