@@ -95,14 +95,15 @@ class Kijiji(DefaultBehaviour):
 					limit_message = self.driver.find_element(
 						"//div[@id='PostingLimitMessage']//span[contains(@class,'tip-body')]",
 					).text
-					if e == 4:
-						raise RuntimeError( # limit message still present after trying 4 times
-							'Category limit still maxed after deleting oldest ad.')
-					elif 'You have reached your limit of' in limit_message:
+					if 'You have reached your limit of' in limit_message:
 						sleep(1)
-						continue # limit message still present, wait a second and check again
+						continue  # limit message still present, wait a second and check again
 					else:
-						break # limit message removed, proceed
+						break  # limit message removed, proceed
+				else:
+					# Limit message still present after refreshing the page 5 times
+					raise RuntimeError(
+						'Category limit still maxed after deleting oldest ad.')
 		self._upload_images(setup['images_path'])  # (4)
 		for parameter in form_params:
 			self._send_parameter(parameter)  # (5)
@@ -578,6 +579,7 @@ class Kijiji(DefaultBehaviour):
 		:param parameter: {'name': 'str', 'value': 'str'}
 		:return: NoReturn
 		"""
+		print(parameter['name'], parameter['value'])
 		if parameter['name'] == 'location':
 			change_loc = self.driver.find_element(
 				"//button[starts-with(@class,'changeLocationButton')]",
@@ -585,78 +587,69 @@ class Kijiji(DefaultBehaviour):
 			)
 			if change_loc is not None:
 				change_loc.click()
-			self.driver.wait_for_element(
-				"//textarea[@id='location']").send_keys(parameter['value'])
-			try:
-				self.driver.wait_for_element(
-					"//div[starts-with(@class,'autocompleteSuggestions')]/div[starts-with(@id,'downshift')]"
-				).click()
-			except:
-				pass  # do nothing if you can't change the optional address/postal code
-			return
-
-		element_type = self._set_detail_type(parameter['name'])
-		if element_type <= 2: # (1) TEXTAREA and (2) TEXT
-			self.driver.send_keys(
-				"//{}[@name='{}']".format(
-					'input' if element_type == 2 else 'textarea', parameter['name']),
-				parameter['value'])
-			# self.driver.send_keys(None, 'TAB')
-		elif element_type == 3: # (3) SELECT
-			self.driver.select_from_list_by_label(
-				"//select[@name='%s']" % parameter['name'],
-				parameter['value']
-			)
-		elif element_type <= 5: # (4) RADIO and (5) CHECKBOX
-			label = self.driver.find_element(
-				"//label[@for='%s']" % parameter['value'])
-			if self.driver.is_visible(label):
-				label.click()
+			for e in range(8):
+				# keep trying to find the location input field for 8 seconds max
+				selectors = [
+					"//textarea[@id='location']",
+					"//textarea[@id='servicesLocationInput']"
+				]
+				for selector in selectors:
+					field = self.driver.find_element(selector, required=False)
+					if field is not None:
+						self.driver.send_keys(field, parameter['value'])
+						self.driver.wait_for_element(
+							"(//div[starts-with(@class,'autocompleteSuggestions')]"
+							"/div[starts-with(@id,'LocationSelector')])[1]"
+						).click()
+						return
+					sleep(1)
 			else:
-				self.driver.scroll_element_into_view(label)
+				raise RuntimeError("Failed to find 'location' input field")
+
+		field = self._find_input_field(parameter)
+		# some checkbox lose reference to field (go 'stale') after scrolling
+		# element into view, so record the attributes first.
+		field_id = field.get_attribute('id')
+		field_type = field.get_attribute('type')
+		field_tag = field.tag_name
+		self.driver.scroll_element_into_view(field)
+		sleep(0.5)
+		if field_tag == 'textarea':  # Textarea
+			self.driver.send_keys(field, parameter['value'])
+		elif field_tag == 'input':  # Text field
+			if field_type == 'text':
+				self.driver.send_keys(field, parameter['value'])
+			else:  # Radio and Checkbox
+				label = self.driver.find_element("//label[@for='%s']" % field_id)
+				self.driver.set_focus_to_element(label)
+				# self.driver.scroll_element_into_view(label)
 				sleep(0.5)
-				label.click()
+				self.driver.find_element("//label[@for='%s']" % field_id).click()
+				sleep(2)
+		elif field_tag == 'select':  # Select
+			self.driver.select_from_list_by_value(field, parameter['value'])
 		else:
 			self.log.critical('Failed to populate a user`s parameter. Name: [%s] ,'
 			                  'value: [%s].' % (parameter['name'], parameter['value']))
 
-	def _set_detail_type(self, element_name: str) -> int:
-		"""Set the element type of a user's detail"""
-		# element types
-		TEXTAREA = 1
-		TEXT = 2
-		SELECT = 3
-		RADIO = 4
-		CHECKBOX = 5
-		OTHER = 6
+	def _find_input_field(self, paramater):
+		"""
 
-		if self.driver.find_element(
-				"//textarea[@name='"+element_name+"']",
-				required=False
-			) is not None:
-			return TEXTAREA
-		elif self.driver.find_element(
-				"//input[@name='"+element_name+"']",
-				required=False
-			) is not None:
-			type_attribute = self.driver.find_element(
-				"//input[@name='"+element_name+"']",
-			).get_attribute('type')
-			if type_attribute.lower() == 'text':
-				return TEXT
-			elif type_attribute.lower() == 'radio':
-				return RADIO
-			elif type_attribute.lower() == 'checkbox':
-				return CHECKBOX
-			else:
-				return OTHER
-		elif self.driver.find_element(
-				"//select[@name='"+element_name+"']",
-				required=False
-			) is not None:
-			return SELECT
-		else:
-			return OTHER
+		:param parameter: {'name': 'str', 'value': 'str'}
+		:return: WebElement
+		"""
+		selectors = [
+			"//textarea[@name='%s']" % paramater['name'],
+			"//input[@name='%s' and @type='text']" % paramater['name'],
+			"//input[@name='%s' and @value='%s']" % (paramater['name'], paramater['value']),
+			"//select[@name='%s']" % paramater['name'],
+		]
+		for selector in selectors:
+			fields = self.driver.find_elements(selector, required=False)
+			for field in fields:
+				if field.get_attribute('type') != 'hidden':
+					return field
+		raise RuntimeError("Failed to find form parameter: " + str(paramater))
 
 	def _sort_my_ads(self):
 		""" Sorts ads from oldest to newest. *via expiration date* """
@@ -684,7 +677,7 @@ class Kijiji(DefaultBehaviour):
 				btn = self.driver.find_element("//form[starts-with(@id,'PostAd')]")
 				if 'shopping' in btn.text.lower():
 					raise RuntimeError('Unable to post as only "+ Add to Shopping '
-					                   'Cart" is availble (locked in professional '
+					                   'Cart" is available (locked in professional '
 					                   'mode).')
 				btn.submit()
 			except:

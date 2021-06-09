@@ -430,7 +430,7 @@ class Element(Base):
 		:return: NoReturn
 		"""
 		element = self.find_element(locator)
-		ActionChains(self.driver).move_to_element(element).perform()
+		self.driver.execute_script("arguments[0].scrollIntoView(true);", element)
 
 	def simulate_event(self, locator, event):
 		"""

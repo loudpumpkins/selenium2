@@ -322,18 +322,13 @@ class Browser:
 		else:
 			ip_address = groups.group(1)
 			# port = groups.group(2) #port not used for the verification
-		self.driver.get('https://www.ip-secrets.com/')
+		api_key = '1be9a6884abd4c3ea143b59ca317c6b2'
+		self.driver.get('https://ipgeolocation.abstractapi.com/v1/?api_key=' + api_key)
 		page_source = self.driver.page_source
 		if ip_address not in page_source:
 			raise AssertionError('The provided IP address ({}) is not set '
 			                     'for ssl page requests.'.format(ip_address))
 		self.log.info('Proxy (%s) passed the ssl page requests test.' % ip)
-		self.driver.get('http://www.ip-secrets.com/')
-		page_source = self.driver.page_source
-		if ip_address not in page_source:
-			raise AssertionError('The provided IP address ({}) is not set '
-			                     'for http page requests.'.format(ip_address))
-		self.log.info('Proxy (%s) passed the http page requests test.' % ip)
 
 	def set_implicit_wait(self, time_to_wait):
 		"""
