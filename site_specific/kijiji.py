@@ -83,23 +83,25 @@ class Kijiji(DefaultBehaviour):
 		self._select_location(setup['location_id'])  # (1)
 		self._go_to_post_page(setup['category_id'])  # (2)
 		limit_message = self.driver.find_element(
-			"//div[@id='PostingLimitMessage']//span[contains(@class,'tip-body')]",
-			required=False
-		)
+			"//div[@id='PostingLimitMessage']", required=False)
 		if limit_message is not None:
-			limit_message = limit_message.text
-			if 'You have reached your limit of' in limit_message:  # (3)
+			limit_message = limit_message.text.lower()
+			if 'have reached your limit of' in limit_message or \
+				'reached the free ad limit' in limit_message:  # (3)
 				self.delete_oldest_ad_of_category(setup['bread_crumbs'])
+				# make sure that the deleted ad is reduced the posting limit
 				for e in range(5):
 					self._go_to_post_page(setup['category_id'])
 					limit_message = self.driver.find_element(
-						"//div[@id='PostingLimitMessage']//span[contains(@class,'tip-body')]",
-					).text
-					if 'You have reached your limit of' in limit_message:
-						sleep(1)
-						continue  # limit message still present, wait a second and check again
-					else:
-						break  # limit message removed, proceed
+						"//div[@id='PostingLimitMessage']", required=False)
+					if limit_message is not None:
+						limit_message = limit_message.text.lower()
+						if 'have reached your limit of' in limit_message or \
+							'reached the free ad limit' in limit_message:
+							sleep(1)
+							continue  # limit message still present, wait a second and check again
+						else:
+							break  # limit message removed, proceed
 				else:
 					# Limit message still present after refreshing the page 5 times
 					raise RuntimeError(
@@ -340,6 +342,13 @@ class Kijiji(DefaultBehaviour):
 				self.driver.wait_for_element(
 					'.//button[starts-with(@class,"actionLink-")]',
 					parent=ad).click() # (5)
+				self.driver.wait_for_element(
+					"//button[text()='Prefer not to say']"
+				).click()
+				self.driver.wait_for_element(
+					"//button[text()='Delete listing']").click()
+				self.driver.wait_for_element(
+					"//button[@id='modalCloseButton']").click()
 				self.log.info("Deleted ad with ID: [%s]."
 				              % ad_id)
 				return True
@@ -374,6 +383,11 @@ class Kijiji(DefaultBehaviour):
 			self.log.info("Deleted an ad.")
 			self.driver.wait_for_element('.//button[starts-with(@class,"actionLink-")]',
 			                         parent=ad).click() #(3)
+			self.driver.wait_for_element(
+				"//button[text()='Prefer not to say']"
+			).click()
+			self.driver.find_element("//button[text()='Delete listing']").click()
+			self.driver.wait_for_element("//button[@id='modalCloseButton']").click()
 			sleep(2)
 		self.driver.goto(self.my_ads)  #(4)
 		try:
@@ -420,7 +434,7 @@ class Kijiji(DefaultBehaviour):
 		for ad in ads: # (4)
 			href = self.driver.wait_for_element(
 				parent=ad,
-				locator=".//a[starts-with(@class,'actionLink')]"
+				locator=".//a[contains(@class,'actionLink')]"
 			).get_attribute('href')
 			raw_id = ad.get_attribute('data-qa-id')
 			ad_id = "".join(
@@ -428,9 +442,8 @@ class Kijiji(DefaultBehaviour):
 			urls.append((href,ad_id))
 		for url in urls:
 			self.driver.goto(url[0])
-			current_bread_crumbs = self.driver.find_element(
-				"//li[@class='category']/div[@class='form-section']").text
-			if current_bread_crumbs	in user_bread_crumbs:
+			current_bread_crumbs = self._get_bread_crumbs()
+			if self._clean(current_bread_crumbs) == self._clean(user_bread_crumbs):
 				return self.delete_ad_with_id(url[1]) # (5)
 
 	def get_active_posts_ids(self) -> List[str]:
@@ -579,7 +592,6 @@ class Kijiji(DefaultBehaviour):
 		:param parameter: {'name': 'str', 'value': 'str'}
 		:return: NoReturn
 		"""
-		print(parameter['name'], parameter['value'])
 		if parameter['name'] == 'location':
 			change_loc = self.driver.find_element(
 				"//button[starts-with(@class,'changeLocationButton')]",
@@ -715,3 +727,34 @@ class Kijiji(DefaultBehaviour):
 			self.log_alert_message()
 		else:
 			self.driver.log.info('No images to upload.')
+
+	def _get_bread_crumbs(self):
+		seconds = 15
+		locators = [  # all the locators where breadcrumbs may be found
+			"//a[contains(@class,'changeCategoryLink')]/parent::div",
+			"//a[@id='PostAdChangeCategory']/parent::div",
+			# "//span[starts-with(@class, 'breadcrumbs')]/parent::div",
+		]
+		for e in range(seconds):
+			for locator in locators:
+				bread_crumbs = self.driver.find_element(
+					locator,
+					required=False
+				)
+				if bread_crumbs is not None:
+					return bread_crumbs.text
+			else:
+				sleep(1)
+		else:
+			raise RuntimeError("Failed to find bread crumbs after a %s seconds "
+			                   "timeout." % seconds)
+
+	def _clean(self, string):
+		"""
+		Clean and extract the essence of breadcrumbs. Formats sometimes varies,
+		so we just compare the essence of the breadcrumbs.
+		"""
+		to_remove = ['\n', '\r', '\t', ' ', '>', 'change', 'category']
+		for sub_string in to_remove:
+			string = string.lower().replace(sub_string, '')
+		return string.strip()
