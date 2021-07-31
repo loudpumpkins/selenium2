@@ -351,6 +351,20 @@ class Kijiji(DefaultBehaviour):
 					"//button[@id='modalCloseButton']").click()
 				self.log.info("Deleted ad with ID: [%s]."
 				              % ad_id)
+				# confirm ad was deleted
+				self.driver.goto(self.my_ads)
+				try:
+					self._sort_my_ads()
+				except Exception:
+					# nothing to sort means all ads deleted
+					return True
+				self.driver.wait_for_element(
+					'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]')
+				sub_ads = self.driver.find_elements(
+					'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]')
+				for sub_ad in sub_ads:
+					if str(ad_id) in sub_ad.get_attribute('data-qa-id'):
+						return self.delete_ad_with_id(ad_id)
 				return True
 		self.log.info('Failed to delete ad id ["%s"]. Not found.' % ad_id)
 		return False

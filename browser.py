@@ -1,4 +1,5 @@
-from .config import *
+from .config import (API_KEY, DEFAULT_TIMEOUT, DEFAULT_SPEED,
+                     SCREENSHOT_ROOT_DIRECTORY, COOKIES_ROOT_DIRECTORY,)
 
 # external
 import re
@@ -265,7 +266,7 @@ class Browser:
 		"""
 		self.site_specific_behaviour.sign_out()
 
-	def site_custom(self, method_name, *args):
+	def site_custom(self, method_name, *args, **kwargs):
 		"""
 		Once a site_specific_behaviour is set, you may call a custom method
 		available only to the specific site.
@@ -276,7 +277,7 @@ class Browser:
 		if hasattr(self.site_specific_behaviour, method_name):
 			method = getattr(self.site_specific_behaviour, method_name)
 			if callable(method):
-				return method(*args)
+				return method(*args, **kwargs)
 			else:
 				raise RuntimeError("Attribute `%s` of site `%s` is not callable."
 							% (method_name, self.site_specific_behaviour.name))
@@ -322,8 +323,7 @@ class Browser:
 		else:
 			ip_address = groups.group(1)
 			# port = groups.group(2) #port not used for the verification
-		api_key = '1be9a6884abd4c3ea143b59ca317c6b2'
-		self.driver.get('https://ipgeolocation.abstractapi.com/v1/?api_key=' + api_key)
+		self.driver.get('https://ipgeolocation.abstractapi.com/v1/?api_key=' + API_KEY)
 		page_source = self.driver.page_source
 		if ip_address not in page_source:
 			raise AssertionError('The provided IP address ({}) is not set '
