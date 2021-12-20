@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 
 # general purpose
 DEBUG = True
@@ -7,37 +7,14 @@ DEBUG = True
 DEFAULT_TIMEOUT = 15
 
 # public API from abstractapi.com (used in geolocation)
-API_KEY = '1be9a6884abd4c3ea143b59ca317c6b2'
+API_KEY = '1be9a6884abd4c3ea143b59ca317c6b2'  # free for anyone to use
 
-# default location to store screenshots. Can be changed using set_screenshot_directory(path)
-SCREENSHOT_ROOT_DIRECTORY = os.path.abspath(
-	os.path.join(
-
-		# file directory (.../selenium2/config)
-		os.path.dirname(os.path.abspath(__file__)),
-
-		# parent node (.../selenium2)
-		os.pardir,
-
-		# sibling node (../selenium2/screenshots)
-		'screenshots'
-	)
-)
-
-# default location to store screenshots. Can be changed using set_cookies_directory(path)
-COOKIES_ROOT_DIRECTORY = os.path.abspath(
-	os.path.join(
-
-		# file directory (.../selenium2/config)
-		os.path.dirname(os.path.abspath(__file__)),
-
-		# parent node (.../selenium2)
-		os.pardir,
-
-		# sibling node (../selenium2/cookies)
-		'cookies'
-	)
-)
+SCREENSHOT_ROOT_DIRECTORY = Path(__file__).parents[1] / 'screenshots'
+# __file__ = 'C:/.../selenium2/config/config.py'
+# parent => 'C:/.../selenium2/config/'
+# parent => 'C:/.../selenium2/'
+# screenshots => 'C:/.../selenium2/screenshots'
+COOKIES_ROOT_DIRECTORY = Path(__file__).parents[1] / 'cookies'
 
 # running speed of the script
 DEFAULT_SPEED = 0.0

@@ -1,4 +1,5 @@
+from .config import *
 try:
     from .config_production import *
-except:
-    from .config import *
+except ModuleNotFoundError:
+    pass
