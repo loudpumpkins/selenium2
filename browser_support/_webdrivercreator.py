@@ -208,6 +208,5 @@ class WebDriverCreator:
             'proxyType': 'MANUAL',
             'sslProxy': ip,
             'httpProxy': ip,
-            'ftpProxy': ip,
         }
         return desired_capabilities

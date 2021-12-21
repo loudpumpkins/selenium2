@@ -15,6 +15,12 @@ Instantiate a simple chrome browser
 	chrome = Browser('chrome')
 	chrome.goto('github.com')
 
+Instantiate a firefox browser with to run through a proxy
+
+.. code-block:: python
+
+	firefox = Browser('firefox', ip='192.0.0.1:12345')
+
 Instantiate a firefox browser with desired capabilities
 
 .. code-block:: python
@@ -43,7 +49,7 @@ through ``Browser.driver``.
 
 .. code-block:: python
 
-	def assert_proxy_is(self, ip:str)->NoReturn: ...
+	def assert_proxy_is(self, ip:str) -> NoReturn: ...
 	def set_implicit_wait(self, time_to_wait: int) -> NoReturn: ...
 	def unset_implicit_wait(self) -> NoReturn: ...
 
