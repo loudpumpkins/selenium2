@@ -6,6 +6,8 @@ from ..config import *
 from selenium.common.exceptions import TimeoutException
 from typing import Any, Callable, List, NamedTuple, NoReturn, Union as U, Tuple
 from time import sleep
+from random import randrange
+import os
 
 # internal
 from ..logger import Logger
@@ -109,6 +111,7 @@ class Kijiji(DefaultBehaviour):
 		self._upload_images(setup['images_path'])  # (4)
 		for parameter in form_params:
 			self._send_parameter(parameter)  # (5)
+			sleep(randrange(6, 12))  # wait a few seconds to mimic a human
 		self._dismiss_obstacles()  # (6)
 		if preview: # (7)
 			self._preview_post()
@@ -117,8 +120,13 @@ class Kijiji(DefaultBehaviour):
 		else:
 			self._submit_post()
 		self._assert_post_success()
-		return self.driver.wait_for_element(
-			'//a[starts-with(@class,"adId-")]').text
+		for attempt in range(4):
+			try:
+				return self.driver.wait_for_element(
+					'//a[starts-with(@class,"adId-")]').text
+			except:
+				sleep(1)
+		return self.driver.wait_for_element('//a[starts-with(@class,"adId-")]').text
 
 	def delete_content(self, details: dict) -> bool:
 		"""
@@ -331,12 +339,12 @@ class Kijiji(DefaultBehaviour):
 		try:
 			self._sort_my_ads() # (2)
 			self.driver.wait_for_element(
-				'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]')
+				'//tr[starts-with(@class,"item")]')
 		except Exception as e:
 			self.log.info('Unable to sort ads [no ads in My Ads]: ' + str(e).replace('\n', ''))
 			return False
 		ads = self.driver.find_elements(
-			'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]')  # (3)
+			'//tr[starts-with(@class,"item")]')  # (3)
 		for ad in ads: # (4)
 			if str(ad_id) in ad.get_attribute('data-qa-id'):
 				self.driver.wait_for_element(
@@ -346,7 +354,7 @@ class Kijiji(DefaultBehaviour):
 					"//button[text()='Prefer not to say']"
 				).click()
 				self.driver.wait_for_element(
-					"//button[text()='Delete listing']").click()
+					"//button[text()='Delete My Ad']").click()
 				self.driver.wait_for_element(
 					"//button[@id='modalCloseButton']").click()
 				self.log.info("Deleted ad with ID: [%s]."
@@ -359,9 +367,9 @@ class Kijiji(DefaultBehaviour):
 					# nothing to sort means all ads deleted
 					return True
 				self.driver.wait_for_element(
-					'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]')
+					'//tr[starts-with(@class,"item")]')
 				sub_ads = self.driver.find_elements(
-					'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]')
+					'//tr[starts-with(@class,"item")]')
 				for sub_ad in sub_ads:
 					if str(ad_id) in sub_ad.get_attribute('data-qa-id'):
 						return self.delete_ad_with_id(ad_id)
@@ -385,10 +393,8 @@ class Kijiji(DefaultBehaviour):
 			raise RuntimeError('Attempted to delete all ads, but the user is '
 			                   'not signed in.')
 		self.driver.goto(self.my_ads) #(1)
-		self.driver.wait_for_element(
-			'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]')
-		ads = self.driver.find_elements(
-			'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]') # (2)
+		self.driver.wait_for_element('//tr[starts-with(@class,"item")]')
+		ads = self.driver.find_elements('//tr[starts-with(@class,"item")]') # (2)
 		if ads == previous: # prevents infinite recursion
 			raise RuntimeError('Attempted to delete all ads, but recursion has '
 			                   'no effect on number of ads left.')
@@ -400,7 +406,7 @@ class Kijiji(DefaultBehaviour):
 			self.driver.wait_for_element(
 				"//button[text()='Prefer not to say']"
 			).click()
-			self.driver.find_element("//button[text()='Delete listing']").click()
+			self.driver.find_element("//button[text()='Delete My Ad']").click()
 			self.driver.wait_for_element("//button[@id='modalCloseButton']").click()
 			sleep(2)
 		self.driver.goto(self.my_ads)  #(4)
@@ -436,14 +442,12 @@ class Kijiji(DefaultBehaviour):
 		self.driver.goto(self.my_ads) #(1)
 		try:
 			self._sort_my_ads() #(2)
-			self.driver.wait_for_element(
-				'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]')
+			self.driver.wait_for_element('//tr[starts-with(@class,"item")]')
 		except Exception as e:
 			self.log.info(
 				'Unable to sort ads [no ads in My Ads]: ' + str(e).replace('\n',''))
 			return False
-		ads = self.driver.find_elements(
-			'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]') #(3)
+		ads = self.driver.find_elements('//tr[starts-with(@class,"item")]') #(3)
 		urls:List[Tuple] = [] #('href','adId')
 		for ad in ads: # (4)
 			href = self.driver.wait_for_element(
@@ -469,8 +473,7 @@ class Kijiji(DefaultBehaviour):
 			raise RuntimeError('Attempted to count active posts, but the user is '
 			                   'not signed in.')
 		self.driver.goto(self.my_ads)
-		ads = self.driver.find_elements(
-			'//ul[starts-with(@class,"list")]/li[starts-with(@class,"item")]')
+		ads = self.driver.find_elements('//tr[starts-with(@class,"item")]')
 		ids = []
 		for ad in ads:
 			raw_id = ad.get_attribute('data-qa-id')
@@ -607,14 +610,18 @@ class Kijiji(DefaultBehaviour):
 		:return: NoReturn
 		"""
 		if parameter['name'] == 'location':
-			change_loc = self.driver.find_element(
-				"//button[starts-with(@class,'changeLocationButton')]",
-				required=False
-			)
-			if change_loc is not None:
-				change_loc.click()
-			for e in range(8):
-				# keep trying to find the location input field for 8 seconds max
+			for attempt in range(8):
+				# try a few times to change location
+				change_loc = self.driver.find_element(
+					"//button[starts-with(@class,'changeLocationButton')]",
+					required=False
+				)
+				if change_loc is not None:
+					# locations are sometimes set, sometimes not
+					# may need to force change or can just start inputting address
+					self.driver.scroll_element_into_view(change_loc)
+					change_loc.click()
+
 				selectors = [
 					"//textarea[@id='location']",
 					"//textarea[@id='servicesLocationInput']"
@@ -622,13 +629,21 @@ class Kijiji(DefaultBehaviour):
 				for selector in selectors:
 					field = self.driver.find_element(selector, required=False)
 					if field is not None:
+						field.clear()
+						sleep(0.25)
 						self.driver.send_keys(field, parameter['value'])
-						self.driver.wait_for_element(
-							"(//div[starts-with(@class,'autocompleteSuggestions')]"
-							"/div[starts-with(@id,'LocationSelector')])[1]"
-						).click()
-						return
-					sleep(1)
+						try:
+							self.driver.wait_for_element(
+								"(//div[starts-with(@class,'autocompleteSuggestions')]"
+								"/div[starts-with(@id,'LocationSelector')])[1]"
+							).click()
+							return
+						except TimeoutException:
+							cancel = self.driver.find_element('//button[@id="cancelButton"]',
+															  required=False)
+							if cancel is not None:
+								cancel.click()
+				sleep(0.75)
 			else:
 				raise RuntimeError("Failed to find 'location' input field")
 
@@ -668,6 +683,7 @@ class Kijiji(DefaultBehaviour):
 			"//textarea[@name='%s']" % paramater['name'],
 			"//input[@name='%s' and @type='text']" % paramater['name'],
 			"//input[@name='%s' and @value='%s']" % (paramater['name'], paramater['value']),
+			"//input[@name='%s' and @id='%s']" % (paramater['name'], paramater['value']),
 			"//select[@name='%s']" % paramater['name'],
 		]
 		for selector in selectors:
@@ -681,13 +697,13 @@ class Kijiji(DefaultBehaviour):
 		""" Sorts ads from oldest to newest. *via expiration date* """
 		self.log.info('Sorting ads by expiration date.')
 		class_name = self.driver.wait_for_element(
-			"//ul[starts-with(@class,'expiresList')]//button/*", # SVG element
+			"//th[starts-with(@class,'expiresHeader')]//button/*", # SVG element
 		).get_attribute('class')
 		while 'isSelected' not in class_name or 'ascending' not in class_name:
 			self.driver.click_element(
-				"//ul[starts-with(@class,'expiresList')]//button")
+				"//th[starts-with(@class,'expiresHeader')]//button")
 			class_name = self.driver.find_element(
-				"//ul[starts-with(@class,'expiresList')]//button/*", # SVG element
+				"//th[starts-with(@class,'expiresHeader')]//button/*", # SVG element
 			).get_attribute('class')
 			sleep(1)
 

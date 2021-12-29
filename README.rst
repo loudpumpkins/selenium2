@@ -15,7 +15,7 @@ Instantiate a simple chrome browser
 	chrome = Browser('chrome')
 	chrome.goto('github.com')
 
-Instantiate a firefox browser with to run through a proxy
+Instantiate a firefox browser to run through a proxy
 
 .. code-block:: python
 
