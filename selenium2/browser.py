@@ -1,6 +1,7 @@
 import re
+from typing import Type
 
-from .config import (API_KEY, DEFAULT_TIMEOUT, DEFAULT_SPEED,
+from .config import (DEFAULT_TIMEOUT, DEFAULT_SPEED,
                      SCREENSHOT_ROOT_DIRECTORY, COOKIES_ROOT_DIRECTORY,)
 from .logger import Logger
 from .browser_support.alert import Alert
@@ -15,7 +16,7 @@ from .browser_support.tables import Tables
 from .browser_support.waiting import Waiting
 from .browser_support.windowmanager import WindowManager
 from .browser_support._webdrivercreator import WebDriverCreator
-from .site_specific import DefaultBehaviour, Kijiji
+from .site_specific import SiteBehaviour
 
 
 class Browser:
@@ -59,28 +60,10 @@ class Browser:
             chrome = Browser('chrome')
 
     -   with proxy:
-            proxy = {
-                'proxyType': 'MANUAL',
-                'sslProxy': '192.0.0.1:80',
-                'httpProxy': '192.0.0.1:80',
-                'ftpProxy': '192.0.0.1:80',
-            }
-            dc = {
-                'proxy': proxy,
-            }
-            firefox = Browser('firefox', desired_capabilities=dc)
-
-                [OR]
-
             firefox = Browser('firefox', ip='192.0.0.1:80')
 
     -   with anonymity:
-            profile = FirefoxProfile()
-            profile.set_preference("dom.webdriver.enabled", False)
-            profile.set_preference('useAutomationExtension', False)
-            profile.update_preferences()
-
-            firefox = Browser('firefox', profile=profile)
+            firefox = Browser('firefox ninja', profile='default')
 
     NOTE: browser specific drivers need to be present and their path
     needs to be appended in the system's PATH variable.
@@ -92,8 +75,8 @@ class Browser:
     underscore (_) defined in the following classes/files:
 
         _____CLASS_NAME_________|____FILE_NAME______________|___HIERARCHY_____
-            Driver              |   _driver.py              |   parent
-            Base                |   _base.py                |   child
+            Driver              |   _driver.py              |   root
+            Base                |   _base.py                |   internal
             Alert               |   alert.py                |   leaf
             BrowserManagement   |   browsermanagement.py    |   leaf
             Cookies             |   cookies.py              |   leaf
@@ -109,7 +92,7 @@ class Browser:
     === Additional functionality ===
 
     Additional site-specific methods are available, but a site must be set first.
-    This ca be done using ``Browser.set_site_behaviour(sitename)``
+    This ca be done using ``Browser.set_site_behaviour(SiteBehaviourClass)``.
 
     For instance, before you can use 'sign_in' or 'create_account', you must indicate
     for which site you would like this behaviour to occur.
@@ -118,25 +101,24 @@ class Browser:
 
         chrome = Browser('chrome')
 
-        chrome.set_site_behaviour('facebook')
+        chrome.set_site_behaviour(Meta)
         chrome.sign_in(credentials)
         chrome.post_content(details)
         chrome.sign_out()
 
-        chrome.set_site_behaviour('kijiji')
+        chrome.set_site_behaviour(X)
         chrome.sign_in(credentials)
         chrome.post_content(ad)
         chrome.sign_out()
 
     """
 
-    def __init__(self, browser='ff', desired_capabilities=None,
-                 profile=None, options=None, ip=None):
+    def __init__(self, browser='ff', profile=None, options=None, ip=None):
         self.driver = WebDriverCreator().create_driver(
-            browser, desired_capabilities, profile, options, ip
+            browser, profile, options, ip
         )
         self.implicit_wait = 0
-        self.log = Logger().log
+        self.log = Logger.get_logger()
         self.speed = DEFAULT_SPEED  # TODO add a session speed controller
         self.timeout = DEFAULT_TIMEOUT
         self.screenshot_directory = SCREENSHOT_ROOT_DIRECTORY
@@ -155,14 +137,11 @@ class Browser:
             WindowManager(self),
         ]
         self.get_attributes(libraries)
-        self.site_specific_behaviour = DefaultBehaviour(self)
 
     def __enter__(self):
-        # python context manager
         return self
 
     def __exit__(self, *args):
-        # python context manager
         self.quit()
 
     # TODO possibly add a session manager to allow for multiple sessions at once
@@ -174,7 +153,7 @@ class Browser:
     # def driver(self, driver):
     # 	self.driver = driver
 
-    def set_site_behaviour(self, site):
+    def set_site_behaviour(self, behaviour: Type[SiteBehaviour]):
         """
         Set site-specific behaviour to the given site.
         For instance, before you can use 'sign_in' or 'create_account', you must
@@ -190,13 +169,7 @@ class Browser:
             def sign_in(self, details: dict, cookies: str = None) -> NoReturn: ...
             def sign_out(self) -> NoReturn: ...
         """
-        sites = {
-            'kijiji': Kijiji,
-            'default': DefaultBehaviour,
-        }
-        if site.lower() not in sites:
-            raise NotImplemented('No behaviour found for the given site: %s.' % site)
-        self.site_specific_behaviour = sites[site.lower()](self)
+        self.site_specific_behaviour = behaviour(self)
 
     def create_account(self, details: dict, cookies: str = None):
         """
@@ -308,33 +281,10 @@ class Browser:
         for name in dir(library):
             yield name, getattr(library, name)
 
-    def assert_proxy_is(self, ip):
-        """
-        Use the created driver to navigate to ip-secrets.com and confirm that
-        the ``ip`` provided is the one currently used. Will test for `https`
-        and `http` page requests.
-        :param ip: str - the proxy expected to be running traffic through
-        :return: NoReturn
-        """
-        groups = re.search(r'^(\d+\.\d+\.\d+\.\d+):?(\d+)?', ip)
-        if groups is None:
-            raise ValueError(
-                'The proxy addess provided ({}) is not a valid address.'.format(
-                    ip))
-        else:
-            ip_address = groups.group(1)
-        # port = groups.group(2) #port not used for the verification
-        self.driver.get('https://ipgeolocation.abstractapi.com/v1/?api_key=' + API_KEY)
-        page_source = self.driver.page_source
-        if ip_address not in page_source:
-            raise AssertionError('The provided IP address ({}) is not set '
-                                 'for ssl page requests.'.format(ip_address))
-        self.log.info('Proxy (%s) passed the ssl page requests test.' % ip)
-
     def set_implicit_wait(self, time_to_wait):
         """
-        Set the time in seconds for the driver to wait for pages/elements.
-        This is implemented by the browser's driver and not selenium. As a
+        Set the time in seconds for the browser to wait for pages/elements.
+        This is implemented by the browser's browser and not selenium. As a
         result, behaviour can be unexpected as it is barely documented and
         each browser might have different implementations.
 

@@ -1,15 +1,13 @@
-config/config_production.py
 .idea/
 __pycache__
 *.pyc
 *.log
 
-## ignore contents of folders - (1)
-screenshots/*
-cookies/*
+build/
+dist/
+*.egg-info/
 
-## (2) - but keep the folders themselves - but a file is needed to 
-## keep the folder, so keep empty file '.gitkeep'
-
-!screenshots/.gitkeep
-!cookies/.gitkeep
+# Ignore all files in 'site_specific' except specific ones to maintain structure
+selenium2/site_specific/*
+!selenium2/site_specific/__init__.py
+!selenium2/site_specific/default.py

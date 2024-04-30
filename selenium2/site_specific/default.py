@@ -1,18 +1,15 @@
-from typing import NoReturn
+from typing import NoReturn, Protocol
 
 from ..logger import Logger
 
 
-class DefaultBehaviour:
+class SiteBehaviour(Protocol):
     """
-    Default SITE behaviour such as login, logout, etc. to be implemented by all
-    site-specific classes.
+    Protocol defining site-specific behaviour such as login, logout, etc.,
+    that must be implemented by all site-specific classes.
     """
-    name = 'default'
-
-    def __init__(self, driver):
-        self.driver = driver
-        self.log = Logger().log
+    def __init__(self, browser):
+        self.browser = browser
 
     def create_account(self, details: dict, cookies: str = None) -> bool:
         """
@@ -22,7 +19,7 @@ class DefaultBehaviour:
 
         :return: bool - True for success
         """
-        self._not_implementated('create_account')
+        ...
 
     def create_content(self, details: dict) -> str:
         """
@@ -31,7 +28,7 @@ class DefaultBehaviour:
 
         :return: str - returns an identifier to the new content (url, ID, ...)
         """
-        self._not_implementated('create_content')
+        ...
 
     def delete_content(self, details: dict) -> bool:
         """
@@ -40,7 +37,7 @@ class DefaultBehaviour:
 
         :return: bool - returns True if content found and delete. False otherwise.
         """
-        self._not_implementated('delete_content')
+        ...
 
     def edit_content(self, details: dict) -> bool:
         """
@@ -49,7 +46,7 @@ class DefaultBehaviour:
 
         :return: bool - returns True of content found and edited. False otherwise.
         """
-        self._not_implementated('edit_content')
+        ...
 
     def is_signed_in(self) -> bool:
         """
@@ -57,7 +54,7 @@ class DefaultBehaviour:
 
         :return: bool - True for logged in
         """
-        self._not_implementated('is_signed_in')
+        ...
 
     def is_signed_out(self) -> bool:
         """
@@ -65,7 +62,7 @@ class DefaultBehaviour:
 
         :return: bool - True for logged out
         """
-        self._not_implementated('is_signed_out')
+        ...
 
     def sign_in(self, details: dict, cookies: str = None) -> NoReturn:
         """
@@ -75,15 +72,10 @@ class DefaultBehaviour:
         If the `cookies` filename is not found, it will try to sign in normally
         and save the `cookies` file after signing in.
         """
-        self._not_implementated('sign_in')
+        ...
 
     def sign_out(self) -> NoReturn:
         """
         Sign out from the site. Will try assert that sign_out() was successful.
         """
-        self._not_implementated('sign_out')
-
-    def _not_implementated(self, method):
-        raise NotImplemented('Method `%s` is not implemented or site specific '
-                             'behaviour was not set.\nSet a site specific behaviour '
-                             'using `Browser.set_site_behaviour(site_name)`.' % method)
+        ...

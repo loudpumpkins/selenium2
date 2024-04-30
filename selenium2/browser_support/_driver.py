@@ -1,6 +1,5 @@
 from selenium.webdriver.remote.webdriver import WebDriver
 
-from ..config import *
 from ..logger import Logger
 
 
@@ -16,7 +15,7 @@ class Driver:
         :param root:
         """
         self._root = root
-        self.log = Logger().log
+        self.log = Logger.get_logger()
 
     @property
     def driver(self):

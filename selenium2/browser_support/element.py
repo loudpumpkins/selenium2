@@ -2,8 +2,6 @@ from collections import namedtuple
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
 
-
-from ..config import *
 from ..logger import Logger
 from ._base import Base
 
@@ -12,7 +10,7 @@ class Element(Base):
 
     def __init__(self, root):
         super().__init__(root)
-        self.log = Logger().log
+        self.log = Logger.get_logger()
 
     def clear_element_text(self, locator):
         """
@@ -25,22 +23,6 @@ class Element(Base):
         """
         self.log.info(f'Cleared text at {locator}.')
         self.find_element(locator).clear()
-
-    def click_button(self, locator):
-        """
-        Click button identified by locator. Will automatically append
-        the correct tag to help pinpoint the button
-
-        See `find_element` method in `_base.py` for ``locator`` usage/syntax
-
-        :param locator: WebEelement or str
-        :return: NoReturn
-        """
-        self.log.info(f'Clicking button {locator}.')
-        element = self.find_element(locator, tag='input', required=False)
-        if not element:
-            element = self.find_element(locator, tag='button')
-        element.click()
 
     def click_element(self, locator):
         """
@@ -75,23 +57,6 @@ class Element(Base):
         action.move_by_offset(xoffset, yoffset)
         action.click()
         action.perform()
-
-    def click_image(self, locator):
-        """
-        Click image identified by locator. Will automatically append
-        the correct tag to help pinpoint the image
-
-        See `find_element` method in `_base.py` for ``locator`` usage/syntax
-
-        :param locator: WebElement or str
-        :return: NoReturn
-        """
-        self.log.info(f'Clicking image {locator}.')
-        element = self.find_element(locator, tag='image', required=False)
-        if not element:
-            # A form may have an image as it's submit trigger.
-            element = self.find_element(locator, tag='input')
-        element.click()
 
     def double_click_element(self, locator):
         """
@@ -312,7 +277,7 @@ class Element(Base):
             self.log.info(f'Sending key(s) {str(keys)} to page.')
         self._press_keys(locator, parsed_keys)
 
-    def highlight_elements(self, locator, tag=None):
+    def highlight_elements(self, locator):
         """
         Will cover elements identified by locator with a blue div without
         breaking page
@@ -320,10 +285,9 @@ class Element(Base):
         See `find_element` method in `_base.py` for ``locator`` usage/syntax
 
         :param locator: WebElement or str
-        :param tag: str
         :return: NoReturn
         """
-        elements = self.find_elements(locator, tag=tag)
+        elements = self.find_elements(locator)
         if not elements:
             self.log.info('Attempted to highlight elements, but none were found.')
             return

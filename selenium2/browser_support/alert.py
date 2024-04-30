@@ -12,7 +12,7 @@ class Alert(Driver):
 
     def __init__(self, root):
         super().__init__(root)
-        self.log = Logger().log
+        self.log = Logger.get_logger()
 
     def get_alert(self, timeout=DEFAULT_TIMEOUT,
                   message='Getting alert with a timeout of {} second(s).'):
