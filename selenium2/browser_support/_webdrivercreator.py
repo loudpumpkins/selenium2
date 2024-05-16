@@ -1,5 +1,6 @@
 from selenium import webdriver
 from selenium.webdriver import ChromeOptions, FirefoxOptions, FirefoxProfile
+from selenium.webdriver.safari.options import Options as SafariOptions
 
 from ..logger import Logger
 
@@ -44,10 +45,10 @@ class WebDriverCreator:
             'ie': ['ie', 'ei', 'internetexplorer', 'explorer'],
             # edge
             'edge': ['edge'],
+            'safari': ['safari'],
 
             # TODO: add other browsers
             # 'opera' : 'opera',
-            # 'safari' : 'safari',
             # 'phantomjs' : 'phantomjs',
             # 'htmlunit' : 'htmlunit',
             # 'htmlunitwithjs' : 'htmlunit_with_js',
@@ -184,3 +185,13 @@ class WebDriverCreator:
         if ip:
             options.add_argument(f'--proxy-server={ip}')
         return webdriver.Edge(options=options)
+
+    def create_safari(self, profile, options, ip):
+        """
+        Creates a Safari browser instance.
+        """
+        if not options:
+            options = SafariOptions()
+        if ip:
+            options.add_argument(f'--proxy-server={ip}')
+        return webdriver.Safari(options=options)
