@@ -1,8 +1,9 @@
+import os
 import re
 from typing import Type
 
 from .config import (DEFAULT_TIMEOUT, DEFAULT_SPEED,
-                     SCREENSHOT_ROOT_DIRECTORY, COOKIES_ROOT_DIRECTORY,)
+                     SCREENSHOT_ROOT_DIRECTORY, COOKIE_ROOT_DIRECTORY, REPORT_ROOT_DIRECTORY, )
 from .logger import Logger
 from .browser_support.alert import Alert
 from .browser_support.browsermanagement import BrowserManagement
@@ -13,6 +14,7 @@ from .browser_support.javascript import Javascript
 from .browser_support.screenshot import Screenshot
 from .browser_support.selects import Selects
 from .browser_support.tables import Tables
+from .browser_support.testing import Testing
 from .browser_support.waiting import Waiting
 from .browser_support.windowmanager import WindowManager
 from .browser_support._webdrivercreator import WebDriverCreator
@@ -119,10 +121,11 @@ class Browser:
         )
         self.implicit_wait = 0
         self.log = Logger.get_logger()
-        self.speed = DEFAULT_SPEED  # TODO add a session speed controller
-        self.timeout = DEFAULT_TIMEOUT
-        self.screenshot_directory = SCREENSHOT_ROOT_DIRECTORY
-        self.cookies_directory = COOKIES_ROOT_DIRECTORY
+        self.speed = os.environ.get('DEFAULT_SPEED', 0.0)  # TODO add a session speed controller
+        self.timeout = os.environ.get('SELENIUM2_DEFAULT_TIMEOUT', 15)
+        self.screenshot_directory = os.environ.get('SELENIUM2_SCREENSHOT_PATH', 'screenshots')
+        self.report_directory = os.environ.get('SELENIUM2_REPORT_PATH', 'reports')
+        self.cookie_directory = os.environ.get('SELENIUM2_COOKIE_PATH', 'cookies')
         libraries = [
             Alert(self),
             BrowserManagement(self),
@@ -133,6 +136,7 @@ class Browser:
             Screenshot(self),
             Selects(self),
             Tables(self),
+            Testing(self),
             Waiting(self),
             WindowManager(self),
         ]
@@ -283,8 +287,8 @@ class Browser:
 
     def set_implicit_wait(self, time_to_wait):
         """
-        Set the time in seconds for the browser to wait for pages/elements.
-        This is implemented by the browser's browser and not selenium. As a
+        Set the time in seconds for the driver to wait for pages/elements.
+        This is implemented by the browser's driver and not selenium. As a
         result, behaviour can be unexpected as it is barely documented and
         each browser might have different implementations.
 

@@ -76,7 +76,7 @@ class Cookies(Base):
         :return:
         """
         if path == 'default':
-            path = os.path.join(self._root.cookies_directory, filename)
+            path = os.path.join(self._root.cookie_directory, filename)
         else:
             path = os.path.join(path, filename)
         try:
@@ -122,7 +122,7 @@ class Cookies(Base):
         Sets the directory for saved cookies.
 
         ``path`` can be an absolute path or relative path from the current
-        cookies_directory. If the directory does not exist, it will be
+        cookie_directory. If the directory does not exist, it will be
         created.
 
         ``append`` is set to True by default and will append to current path and
@@ -135,15 +135,15 @@ class Cookies(Base):
         :return: str - previous path
         """
         if path is not None:
-            path = os.path.normpath(os.path.join(self._root.cookies_directory, path)) \
+            path = os.path.normpath(os.path.join(self._root.cookie_directory, path)) \
                 if append else path
             self._create_directory(path)
-        previous = self._root.cookies_directory
+        previous = self._root.cookie_directory
         path = os.path.abspath(path)
         self.log.info('Setting cookies directory from {} to {}'.format(
             previous, path
         ))
-        self._root.cookies_directory = path
+        self._root.cookie_directory = path
         return previous
 
     def set_cookies_expiry(self, date: int = 3735325880):
@@ -172,6 +172,6 @@ class Cookies(Base):
             os.makedirs(target_dir)
 
     def _get_cookies_path(self, filename):
-        directory = self._root.cookies_directory
+        directory = self._root.cookie_directory
         filename = filename.replace('/', os.sep)
         return os.path.join(directory, filename)

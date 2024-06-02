@@ -243,8 +243,8 @@ Environment Variables
 The following environment variables can be set to configure various aspects of the Selenium2 behavior:
 
 ``DEBUG``
-    Controls the debug output of the Selenium2 wrapper. Set to ``True`` to enable verbose logging.
-    Default is ``False``.
+    Controls the debug output of the Selenium2 wrapper. Set to ``False`` to disable verbose logging.
+    Default is ``True``.
 
     .. code-block:: bash
 
@@ -266,13 +266,21 @@ The following environment variables can be set to configure various aspects of t
 
         export SELENIUM2_SCREENSHOT_PATH='/path/to/screenshots'
 
-``SELENIUM2_COOKIES_PATH``
+``SELENIUM2_REPORT_PATH``
+    Sets the directory where test results will be saved.
+    Default is 'reports'.
+
+    .. code-block:: bash
+
+        export SELENIUM2_SCREENSHOT_PATH='/path/to/reports'
+
+``SELENIUM2_COOKIE_PATH``
     Defines the directory for storing browser cookies.
     Default is 'cookies'.
 
     .. code-block:: bash
 
-        export SELENIUM2_COOKIES_PATH='/path/to/cookies'
+        export SELENIUM2_COOKIE_PATH='/path/to/cookies'
 
 These environment variables allow you to customize the behavior of the Selenium2 wrapper without changing the code. They are particularly useful for adapting the wrapper to different testing environments or requirements.
 

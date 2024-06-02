@@ -12,7 +12,6 @@ class Waiting(Base):
         super().__init__(root)
         self.log = Logger.get_logger()
 
-
     def wait_for_element(self, locator, negate=False, timeout=DEFAULT_TIMEOUT,
                          parent=None):
         """
@@ -60,7 +59,7 @@ class Waiting(Base):
         :param timeout: int - explicit wait timeout in seconds
         :return: bool or TimeoutException
         """
-        func = lambda _: self.is_element_enabled(locator)
+        func = lambda _: self.is_enabled(locator)
         if negate:
             self.log.info(
                 'Waiting for element `{}` to be disabled.'.format(locator))

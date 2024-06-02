@@ -12,7 +12,7 @@ with open("README.rst", "r") as f:
 
 setup(
     name="selenium2",
-    version="0.1",
+    version="0.1.1",
     description='A comprehensive Selenium wrapper designed to simplify browser automation and testing tasks.',
     package_dir={"": "."},
     packages=find_packages(),
@@ -28,7 +28,8 @@ setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "selenium==4.2.0"
+        "selenium==4.2.0",
+        "beautifulsoup4==4.12.3"
     ],
     extras_require={
         "dev": ["pytest>=7.0", "twine>=4.0.2"],
